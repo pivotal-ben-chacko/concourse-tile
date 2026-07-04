@@ -95,7 +95,9 @@ def main():
         gaps = [(a, b) for a, b in runs if w * 0.15 < a and b < w * 0.9]
         if not gaps:
             sys.exit("No internal whitespace gap found to split the logo at.")
-        a, b = max(gaps, key=lambda g: g[1] - g[0])
+        # the emblem sits at the right end of the lockup, so the split is the
+        # rightmost gap — letter-spacing gaps within the wordmark can be wider
+        a, b = gaps[-1]
         wordmark = trim(logo.crop((0, 0, a, h)))
         emblem = trim(logo.crop((b, 0, w, h)))
 
