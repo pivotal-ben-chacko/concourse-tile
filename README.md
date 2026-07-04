@@ -5,7 +5,8 @@ A VMware Tanzu Ops Manager tile that packages [Concourse CI](https://concourse-c
 | Instance group | Jobs (release) | Purpose |
 |---|---|---|
 | `web` | `web` (concourse), `bpm` (bpm) | Concourse ATC/web UI and TSA worker gateway, TLS on 443 |
-| `worker` | `worker` (concourse) | Build workers; register with the web node's TSA via BOSH links |
+| `worker` | `worker` (concourse) | General build workers; register with the web node's TSA via BOSH links |
+| `tagged_worker` | `worker` (concourse) | Workers advertising a configurable tag (default 0 instances) |
 | `db` | `postgres` (postgres) | PostgreSQL hosting the `atc` database |
 
 Ops Manager auto-generates the credentials wired between them (postgres password, token signing key, TSA host key, worker SSH key) via the tile's `variables:` section — nothing to manage by hand.
@@ -84,6 +85,14 @@ All settings live under the tile's single **Settings** form:
   - **LDAP authentication** — exposes the full Concourse LDAP configuration: server host (`host:port`, no `ldap://` scheme — the port is inferred from the TLS settings), bind DN/password, TLS options (no-TLS, skip-verify, StartTLS, CA cert), user search (base DN, filter, username/id/email/name attributes), optional group search, and an LDAP username granted access to the `main` team. Grant further users/teams with `fly set-team`.
 
   LDAP gotchas: fill in *all* group-search fields or none — a partially configured group search breaks LDAP login (typical values: filter `(objectClass=groupOfNames)`, user attribute `DN`, group attribute `member`, name attribute `cn`). Because the local admin stays enabled, a bad LDAP config can't lock you out — log in locally and switch back.
+
+- **Tagged Worker Pool Tag** — the tag advertised by workers in the `tagged_worker` instance group. Pipeline steps target them with `tags: [<value>]`; untagged steps never land on tagged workers. Scale the pool on the **Resource Config** page. For a tagged-only deployment, set the untagged `worker` group to 0 instances and the `tagged_worker` group to 1+.
+
+The **Pipeline Secrets** form configures the credential manager backing `((var))` references in pipelines — a selector with three options, switchable at any time:
+
+- **None** (default) — no credential manager.
+- **CredHub** — server URL, UAA client ID/secret (needs `credhub.read` scope), CA cert or skip-verify, and a path prefix (default `/concourse`; secrets resolve at `<prefix>/TEAM/PIPELINE/name`, then `<prefix>/TEAM/name`).
+- **Vault** — server URL, a periodic client token, optional Vault Enterprise namespace, CA cert or skip-verify, and the same path-prefix scheme.
 
 ## How the auth selector works (for tile authors)
 
