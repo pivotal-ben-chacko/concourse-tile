@@ -1,0 +1,11 @@
+---
+slug: concourse
+release_sources:
+- type: bosh.io
+releases:
+- name: bpm
+- name: concourse
+- name: postgres
+stemcell_criteria:
+  os: ubuntu-jammy
+  version: "1"

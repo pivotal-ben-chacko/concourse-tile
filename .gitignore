@@ -1,0 +1,4 @@
+releases/*.tgz
+*.pivotal
+bin/
+metadata/

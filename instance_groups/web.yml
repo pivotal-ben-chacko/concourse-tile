@@ -1,0 +1,68 @@
+---
+name: web
+resource_label: web
+manifest: |
+  add_local_users:
+  - ((.properties.credentials.identity)):((.properties.credentials.password))
+  external_url: (( .properties.external_url.value ))
+  ldap_auth: (( .properties.auth_selector.selected_option.parsed_manifest(ldap_auth_snippet) ))
+  main_team:
+    auth: (( .properties.auth_selector.selected_option.parsed_manifest(main_team_auth_snippet) ))
+  postgresql:
+    database: atc
+    role:
+      name: concourse
+      password: (((postgres_password)))
+  tls:
+    bind_port: 443
+    cert:
+      certificate: ((.properties.tls_credentials.cert_pem))
+      private_key: ((.properties.tls_credentials.private_key_pem))
+  token_signing_key: (((token_signing_key)))
+  worker_gateway:
+    authorized_keys: |
+      (((worker_key.public_key)))
+    host_key: (((tsa_host_key)))
+max_in_flight: 1
+single_az_only: false
+errand: false
+run_pre_delete_errand_default: true
+run_post_deploy_errand_default: true
+templates:
+- name: web
+  release: concourse
+- name: bpm
+  release: bpm
+instance_definition:
+  default: 1
+  configurable: true
+resource_definitions:
+- name: ram
+  default: 512
+  configurable: true
+  constraints:
+    min: 0
+- name: ephemeral_disk
+  default: 4096
+  configurable: true
+  constraints:
+    min: 4096
+- name: persistent_disk
+  default: 0
+  configurable: true
+  constraints:
+    min: 0
+- name: cpu
+  default: 1
+  configurable: true
+  constraints:
+    min: 1
+property_blueprints:
+- name: vm_credentials
+  type: salted_credentials
+  default:
+    identity: vcap
+  configurable: false
+  optional: false
+  freeze_on_deploy: false
+  unique: false

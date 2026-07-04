@@ -1,0 +1,40 @@
+---
+name: concourse
+product_version: $( version )
+minimum_version_for_upgrade: 0.0.1
+label: Concourse 7.9
+rank: 1
+metadata_version: 3.0.3
+original_metadata_version: '1.8'
+service_broker: false
+opsmanager_syslog: false
+icon_image: $( icon )
+serial: true
+variables:
+- name: postgres_password
+  type: password
+- name: token_signing_key
+  type: rsa
+- name: tsa_host_key
+  type: ssh
+- name: worker_key
+  type: ssh
+releases:
+- $( release "bpm" )
+- $( release "concourse" )
+- $( release "postgres" )
+stemcell_criteria:
+  os: ubuntu-jammy
+  version: "1"
+  enable_patch_security_updates: true
+property_blueprints:
+- $( property "credentials" )
+- $( property "external_url" )
+- $( property "tls_credentials" )
+- $( property "auth_selector" )
+form_types:
+- $( form "settings" )
+job_types:
+- $( instance_group "web" )
+- $( instance_group "worker" )
+- $( instance_group "db" )

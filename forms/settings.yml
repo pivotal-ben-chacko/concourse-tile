@@ -1,0 +1,86 @@
+---
+property_inputs:
+- reference: ".properties.credentials"
+  label: Local Concourse User
+  description: Create local login user credentials
+- reference: ".properties.external_url"
+  label: Web VM domain
+  description: Enter external url for web UI
+- reference: ".properties.tls_credentials"
+  label: TLS Certificate
+  description: TLS Certificate
+- reference: ".properties.auth_selector"
+  label: Authentication
+  description: Choose between local user authentication and LDAP. Local users remain
+    able to log in when LDAP is selected, and you can switch back to local-only authentication
+    at any time.
+  selector_property_inputs:
+  - reference: ".properties.auth_selector.internal_option"
+    label: Local user authentication
+  - reference: ".properties.auth_selector.ldap_option"
+    label: LDAP authentication
+    property_inputs:
+    - reference: ".properties.auth_selector.ldap_option.host"
+      label: LDAP Server Host
+      description: Host and optional port of the LDAP server, e.g. ldap.example.com:636.
+        Do not include a scheme. If the port is omitted it defaults to 389, or 636
+        when TLS is used.
+    - reference: ".properties.auth_selector.ldap_option.display_name"
+      label: Display Name
+      description: Connector name shown on the Concourse login page.
+    - reference: ".properties.auth_selector.ldap_option.bind_dn"
+      label: Bind DN
+      description: DN of the service account used to search for users, e.g. uid=admin,ou=Users,dc=example,dc=com.
+    - reference: ".properties.auth_selector.ldap_option.bind_pw"
+      label: Bind Password
+      description: Password for the Bind DN service account.
+    - reference: ".properties.auth_selector.ldap_option.insecure_no_ssl"
+      label: Connect Without TLS
+      description: Required when the LDAP host is not using TLS (typically port 389).
+    - reference: ".properties.auth_selector.ldap_option.insecure_skip_verify"
+      label: Skip TLS Certificate Verification
+    - reference: ".properties.auth_selector.ldap_option.start_tls"
+      label: Use StartTLS
+      description: Connect on an insecure port and negotiate TLS via StartTLS.
+    - reference: ".properties.auth_selector.ldap_option.ca_cert"
+      label: CA Certificate
+      description: PEM-encoded CA certificate used to verify the LDAP server certificate.
+    - reference: ".properties.auth_selector.ldap_option.user_search_base_dn"
+      label: User Search Base DN
+      description: Base DN to search for users, e.g. ou=Users,dc=example,dc=com.
+    - reference: ".properties.auth_selector.ldap_option.user_search_filter"
+      label: User Search Filter
+      description: Optional filter applied when searching for users, e.g. (objectClass=inetOrgPerson).
+    - reference: ".properties.auth_selector.ldap_option.user_search_username"
+      label: Username Attribute
+      description: Attribute matched against the username entered at login, e.g. uid
+        or sAMAccountName.
+    - reference: ".properties.auth_selector.ldap_option.user_search_id_attr"
+      label: User ID Attribute
+    - reference: ".properties.auth_selector.ldap_option.user_search_email_attr"
+      label: User Email Attribute
+    - reference: ".properties.auth_selector.ldap_option.user_search_name_attr"
+      label: User Display Name Attribute
+    - reference: ".properties.auth_selector.ldap_option.group_search_base_dn"
+      label: Group Search Base DN
+      description: Base DN to search for groups, e.g. ou=Groups,dc=example,dc=com.
+        Leave blank to disable group search.
+    - reference: ".properties.auth_selector.ldap_option.group_search_filter"
+      label: Group Search Filter
+      description: Optional filter applied when searching for groups, e.g. (objectClass=groupOfNames).
+    - reference: ".properties.auth_selector.ldap_option.group_search_user_attr"
+      label: Group Search User Attribute
+      description: User attribute matched against the group attribute, e.g. DN.
+    - reference: ".properties.auth_selector.ldap_option.group_search_group_attr"
+      label: Group Search Group Attribute
+      description: Group attribute containing the user match, e.g. member.
+    - reference: ".properties.auth_selector.ldap_option.group_search_name_attr"
+      label: Group Name Attribute
+      description: Group attribute used as the group name, e.g. cn.
+    - reference: ".properties.auth_selector.ldap_option.main_team_user"
+      label: Main Team LDAP User
+      description: LDAP username granted access to the Concourse main team. Additional
+        users and groups can be added later with fly set-team.
+name: settings
+label: Settings
+description: Edit Concourse Settings

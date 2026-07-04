@@ -1,0 +1,20 @@
+---
+releases:
+- name: bpm
+  version: 1.1.21
+  sha1: e8abe19ec186962828de843f8f281cddb6141904
+  remote_source: bosh.io
+  remote_path: https://bosh.io/d/github.com/cloudfoundry/bpm-release?v=1.1.21
+- name: concourse
+  version: 7.9.0
+  sha1: 0920d2a3c13a81f50529ae72118a9d83bece7e65
+  remote_source: bosh.io
+  remote_path: https://bosh.io/d/github.com/concourse/concourse-bosh-release?v=7.9.0
+- name: postgres
+  version: "44"
+  sha1: 582b1de9522077102dfa44ff7164cd8f499dbfc8
+  remote_source: bosh.io
+  remote_path: https://bosh.io/d/github.com/cloudfoundry/postgres-release?v=44
+stemcell_criteria:
+  os: ubuntu-jammy
+  version: "1"

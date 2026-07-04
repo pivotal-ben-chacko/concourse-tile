@@ -1,0 +1,181 @@
+---
+name: auth_selector
+type: selector
+default: internal
+configurable: true
+optional: false
+freeze_on_deploy: false
+unique: false
+option_templates:
+- name: internal_option
+  select_value: internal
+  named_manifests:
+  - name: ldap_auth_snippet
+    manifest: "{}\n"
+  - name: main_team_auth_snippet
+    manifest: |
+      local:
+        users:
+        - (( .properties.credentials.identity ))
+- name: ldap_option
+  select_value: ldap
+  property_blueprints:
+  - name: host
+    type: string
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  - name: display_name
+    type: string
+    default: LDAP
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: bind_dn
+    type: string
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  - name: bind_pw
+    type: secret
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  - name: insecure_no_ssl
+    type: boolean
+    default: false
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  - name: insecure_skip_verify
+    type: boolean
+    default: false
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  - name: start_tls
+    type: boolean
+    default: false
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  - name: ca_cert
+    type: text
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: user_search_base_dn
+    type: string
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  - name: user_search_filter
+    type: string
+    default: "(objectClass=inetOrgPerson)"
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: user_search_username
+    type: string
+    default: uid
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  - name: user_search_id_attr
+    type: string
+    default: uid
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: user_search_email_attr
+    type: string
+    default: mail
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: user_search_name_attr
+    type: string
+    default: displayName
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: group_search_base_dn
+    type: string
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: group_search_filter
+    type: string
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: group_search_user_attr
+    type: string
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: group_search_group_attr
+    type: string
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: group_search_name_attr
+    type: string
+    configurable: true
+    optional: true
+    freeze_on_deploy: false
+    unique: false
+  - name: main_team_user
+    type: string
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  named_manifests:
+  - name: ldap_auth_snippet
+    manifest: |
+      host: (( .properties.auth_selector.ldap_option.host.value ))
+      display_name: (( .properties.auth_selector.ldap_option.display_name.value ))
+      bind_dn: (( .properties.auth_selector.ldap_option.bind_dn.value ))
+      bind_pw: (( .properties.auth_selector.ldap_option.bind_pw.value ))
+      insecure_no_ssl: (( .properties.auth_selector.ldap_option.insecure_no_ssl.value ))
+      insecure_skip_verify: (( .properties.auth_selector.ldap_option.insecure_skip_verify.value ))
+      start_tls: (( .properties.auth_selector.ldap_option.start_tls.value ))
+      ca_cert: (( .properties.auth_selector.ldap_option.ca_cert.value ))
+      user_search_base_dn: (( .properties.auth_selector.ldap_option.user_search_base_dn.value ))
+      user_search_filter: (( .properties.auth_selector.ldap_option.user_search_filter.value ))
+      user_search_username: (( .properties.auth_selector.ldap_option.user_search_username.value ))
+      user_search_id_attr: (( .properties.auth_selector.ldap_option.user_search_id_attr.value ))
+      user_search_email_attr: (( .properties.auth_selector.ldap_option.user_search_email_attr.value ))
+      user_search_name_attr: (( .properties.auth_selector.ldap_option.user_search_name_attr.value ))
+      group_search_base_dn: (( .properties.auth_selector.ldap_option.group_search_base_dn.value ))
+      group_search_filter: (( .properties.auth_selector.ldap_option.group_search_filter.value ))
+      group_search_user_attr: (( .properties.auth_selector.ldap_option.group_search_user_attr.value ))
+      group_search_group_attr: (( .properties.auth_selector.ldap_option.group_search_group_attr.value ))
+      group_search_name_attr: (( .properties.auth_selector.ldap_option.group_search_name_attr.value ))
+  - name: main_team_auth_snippet
+    manifest: |
+      ldap:
+        users:
+        - (( .properties.auth_selector.ldap_option.main_team_user.value ))
+      local:
+        users:
+        - (( .properties.credentials.identity ))

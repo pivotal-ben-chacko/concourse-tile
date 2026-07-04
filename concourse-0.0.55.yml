@@ -1,0 +1,488 @@
+---
+name: concourse
+product_version: 0.0.55
+minimum_version_for_upgrade: 0.0.1
+label: Concourse 7.9
+rank: 1
+metadata_version: 3.0.3
+original_metadata_version: '1.8'
+service_broker: false
+opsmanager_syslog: false
+icon_image: iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAhGVYSWZNTQAqAAAACAAFARIAAwAAAAEAAQAAARoABQAAAAEAAABKARsABQAAAAEAAABSASgAAwAAAAEAAgAAh2kABAAAAAEAAABaAAAAAAAAAEgAAAABAAAASAAAAAEAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAgKADAAQAAAABAAAAgAAAAAC7tGl0AAAACXBIWXMAAAsTAAALEwEAmpwYAAACymlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNi4wLjAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyIKICAgICAgICAgICAgeG1sbnM6ZXhpZj0iaHR0cDovL25zLmFkb2JlLmNvbS9leGlmLzEuMC8iPgogICAgICAgICA8dGlmZjpZUmVzb2x1dGlvbj43MjwvdGlmZjpZUmVzb2x1dGlvbj4KICAgICAgICAgPHRpZmY6UmVzb2x1dGlvblVuaXQ+MjwvdGlmZjpSZXNvbHV0aW9uVW5pdD4KICAgICAgICAgPHRpZmY6WFJlc29sdXRpb24+NzI8L3RpZmY6WFJlc29sdXRpb24+CiAgICAgICAgIDx0aWZmOk9yaWVudGF0aW9uPjE8L3RpZmY6T3JpZW50YXRpb24+CiAgICAgICAgIDxleGlmOlBpeGVsWERpbWVuc2lvbj4yMDA8L2V4aWY6UGl4ZWxYRGltZW5zaW9uPgogICAgICAgICA8ZXhpZjpDb2xvclNwYWNlPjE8L2V4aWY6Q29sb3JTcGFjZT4KICAgICAgICAgPGV4aWY6UGl4ZWxZRGltZW5zaW9uPjE3MDwvZXhpZjpQaXhlbFlEaW1lbnNpb24+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgrtihAVAAAcdklEQVR4Ae2de3Ad9XXHj562bMmWZcvY+P2EpLwfKY8hcSChBUIaQpsBEmq3hDq0zTBk2k6SYdJMaYeSNIRkJqFpmRCgFMIflDQtgTSAh6HQBAiEZ7CxLRs/ZEmWLVuWJUtX6uf72/1dVqt77ZV0byQ2e8ZXu/vbs+d3Ht/f+Z397d7riqHrbcgymvweqKgIdBwKw6XjQvujtKR6lPwZ+0R5wAfb9x89ju778wm3lQn5MraUeiADQEoDm9SsDABJPZVSvgwAKQ1sUrMyACT1VEr5MgCkNLBJzcoAkNRTKeXLAJDSwCY1KwNAUk+llC8DQEoDm9SsDABJPZVSvgwAKQ1sUrMyACT1VEr5MgCkNLBJzcoAkNRTKeXLAJDSwCY1KwNAUk+llC8DQEoDm9SsDABJPZVSvgwAKQ1sUrMyACT1VEr5MgCkNLBJzcoAkNRTKeXLAJDSwCY1KwNAUk+llC8DQEoDm9SsDABJPZVSvgwAKQ1sUrMyACT1VEr5MgCkNLBJzcoAkNRTKeX7DQAg/GEDOVC/beA/KXXoe82s38APRFSZVU41q5jCh33TL1sMmOX2vtd8lUp9ywAAjXiGeWW9WdVcs/4dZj3dZkf49AenrIbtzJAvlW597xhVYgBodBP8qkazgZzZri1mc1aYLTvJbO5xZtMBRHWt2aH9Zi/cRTI4gKcyIEwkXEoMAAV/hlkfAa5ZaLb+DrNTzzdrZr+ariqZAirYtr9j9vzj7L+O7UoHPjVMpCt+O/suLQAqpjHyGdVT55vd9IjZ6jOHe9X/mNGgRr3qgYwm2gOluwtQdV89m9HN9srbg+APMg0MDQbTgrNUTNAQ7aZPRhPtgdJlgAqw1M/oBwN22gWBXfotO7WL3OjXyIdquCswaoGMJtwDpQNAJem/p8tsxcfMGhoDw6I/bqj9XJ9Z526ztp3UA72h8WSIjCbMA6UFQC+3enNOYSpQYSci6Br5Cn4Xc8P9/2j2+s8AgoL+tuOgaAi32WYiPFC6GqCCoKuYn9bM6C6Aq6f+w+weaoNcJzFX8LPAT0TA432WDgCGKNV4VVrxC0e+GrTff9hs64tmqzivHqtUAIYFIXsZTZwHSggAjFBMFXBPPsYDpIZeQKDjIeZ+LQVnNCk8UFoA5E2KgEBtAkUUGNnoz3tqonfKBIC4WT4VxNuz44n2QIFqbaJVStJ/NMOMB1ylkhPVWTLHo1NUVvn3JwgAUSdFgyCDkzgvCU8S541WTlzXQvpGZSbhj+s5lmviMpIflwYAFazqVbMQpNt/v/I3TAeM0oMg9VbVwB+cpPcBKmfwqeMwdJrqhCEKRt0qxkkPkSpnIV/vFmjmCh3llpqPmA3yAEoF5rFI1+tppVYiXV0iOfQvHYZYqHJy2I4g+KqauAY9/NqGe69BunKtHn9XzuQ8TsihyyCrolXcEkcBrf5yB2nqGSHdNRT0B3dMuY7C/CVoHT8AFIwBAnDwLTPp2c/+CMJBvawS8o/7wcAndQTgCE7q4xPG0vlKz4imKsBaLOKEnF0txxO0A1uQQ7PioztJsWlFWSvLDYsAIPz92zkoQrVLOM8dyP6dgRypqm4kh7tX92mApwbheo/BKUb/jtgeArTqV/qqWbrquhoedfejWCdyFVtwauDaDuwJeNl1pGukazUXuuchQbP7q5dl5Av5JOoP6SZZZaJxAgCl9cCnjqd+c883m8FqX2MM9VJcyJ97Og+ICOJ0MkAfSNjzA3gv55plOFUrSPAoS/RzruOB4FhOknO7ceRBRtqpa82WL0XWCgJP9ujH251bzbYRrFfvDIJ6HPIGaItTNe27aZczT/0Ls8XzzZpoq5mOnENmewFXC3Je+V4Q5LlLaW+BWREQShjdC6+AH/0HAZEywQCjef9/A2z0q1tuduF6s2Unm735vNnLd5utXAvvUBBQAbkSWfteNDv8XHB9fjFMWQMfzLoMIGOb5IvEr+Xztns5EOrxUTSjcDReqhjXfxpVTbDb2s0u/6rZVX+FQwhYFcZMlZcjpDTdS7AG2eqFkA5GynUrzb78mNl5H+Yco0e2VTOcWjeb3XoJsrYT5EU49x2zRR80u+YfeM5wEiuN9aHzvHz61BrD7hazn/3Q7NG/N5u3FMdx7B1WPQ+5rWaX3Gz20as4vyTUsQoeT8g5jI476f8nOPzJb5rNByA5+h8gIPUfMPviAwRpPscES8vdB9vMvrqK5e9PmF1/C/xLsR8bHr2fz/fNvvYwwgGKACQA1GL7E4+YffdqALiAmO4M7T4e/XeZ/d1zZicyUI6EwdY7FO20/+37kCtQyEnIKiFJu3EQCJU+CuoURhK2FyRNE3UEztNUeDXoa7lA107HmSJlCgcetpqne3D+4g+afYGANBM0kRypUaWRIH9ohE5Ftt46um41QQA096yHHwf34+DahTh3h9m6uwDqWq4JTXZyCLobUQjSaKtjdK88zexzyJmHnAe/gLwVyAEUzgbqHOk3RB6Xrkd0zPn1t5odzzYneVCOYHU8yXkA1QhgROpP18yRXmqIuH6IvuWCJrJdTegTsYj/EJmvmwuaAHEOEJeY6Hk8pEBAbj5jXyNchhYiZQHvIJ/i/HH0nQHJcMEFAGRmu/brQfDF65xIG35xzgkQELRrKqoETJesM1tzIymd4NetIkMR/Iu//G7w3TsK6ChZVVV8CIS26lNtOl9DYD/xObMLbmCK2UysOC+9ovpyhR1ivr7sS0HwdZ0CJqrGrdvZdjGdiaJ+UX2D+PzUoLk/RzGCuVYdXi895BNR596grqgEGGWgcQIgVNg9/GFfo8g7Ia6sRpBzNCfEr0vzvBzk92mvIkPsbzE75895fnAKDVBVKHso5BV/9KP6QY6uAgS/fx1O5Rp9NLIuuRZe+nQggU+dS1fN3VtfI81upymU7+XUMNIvBwAOj9QblREdxSua0WT2gcuC/bjtxM16yAAir6f2G3lhQgDQnO/65OBIG1PLxWRC+hE5X9Cf6CAgkw6uzbWU9A9eGQ/hYfmzj8fAh/cFNUANAZgaGpIXDaIPMxo0dyrFiZemolRJ1DR4Tvsw/KRbBVYOdhkAx7z2jNlz/xWk04uuIRA41Z+T0ONI+6u59q2nzM5fTw2xIuhKwfV8b/7c7F8/T1FGmqmlmPvMtxjxV7x7XlcsJoOcBQh/8V2KM+yK0/RZ77bIHgdA+lBgBb69Lfw5g0+E6qmb6k9mGngT3+EL3Qb30f9s2moBgycXcIS0/Rp/0ijwloHGB4CBTlcc24v3kfJeYd57mvRLyr7y+sCRUliG9OHkH3zFbMuzoJ95TlMGfuKk/owkpT9lvLnh/Ck2HzgVkLddgEzaNvPJcfIP/5KdCE3BqQvOMfsfAPDZD+FkAOWuh0f6HGZU3Uvq3v48fRDkwwzXb32S+X9LUPiJV8EU+N5HAJ/kukKPuF2X8PLPyXUZjuukv+zrbHccIUOwr+lkBiDY8yopHz3FqNg2EHxlOU/SU8VnB4ML9YPCwTnCc5RkOz4AKDcpNR7ejjNBcQvD9kyUjg9vOaSjg4C9iPGcrl1wdOV160NdZzNmhnwyPKS2PUF2WHk6YHrJ7A1A1XMt+/AqcCJV6FMYnXRrzbNdk/vjAsVe60503UCmWIpft+D85ei3ielgYwAAMbsRyHb+CUGA4jaJx5N4NY28gX17kLcRYK3kpOZvRxH9a3B50yKzHZyoQ0//HkVTAwDgXGiCu6wPP+xtCwCgBbIyED2Ol9BYqJbDG0ntKoDcyI5aQtMUUqiCOp3ga44vSjhLK3LKAApqnA7Rh0RrvUDbHgoo94ZRjFFgkAy3LqFzXh/kdwPGPo5docU2R4ZyI5YgxmkaWUCZ2fHGTrqsgjzd93/zSm4h38F+eIS5Jj67Sd+a+uoi4Kxl1M99P+2cnynBXIC51gwI82sOIWB6sLX9HqYAKsRBdMzbwG6JqAQAQBOldFWybvB7R8c0VEpVqsv1gg9FpgjJdi2xVoGWak1+MVI/zj/80TanQMZ4PAAV1Gkqr2Ok2zR3jQQoTYRUaJ6tVTbhvPSPkg/+fjLSd27gjoDga51ikMJPn6FWgreL4KIvMXfkrkEpgVIDWkvonhqEGEh6Vbg/gARkMMvabACkpeUyUGkA4BRzUTmKiuF5n1qPwhmcksNHRJbpg+zhmsNzcqo+ovyWa7UvAPj7fscQ/imkaigiyub2lZaV1OK6SL5s2Uwxt4XUv5JR3csdhUjPG6oJ2v63AQCA96Q+1HeDUr8a+aPULoBoaVzk27XfRfSVKVRUFspA4hknOdPGKaO0lzsn4aABRpHW1+OkWy/BNp9FMMG/hOpvxVSwqeIfRs6zQUuxYA/jP8aBB/KuzcEcnSPVe9IUVs2U2L0NEJAFHAkwYcezKISdOgBV12lGlF2OInqqnlCEKpRay0MlzAClUhAn6dvEQv5Biqi5i4cLnk8NsWoNRdsGnIz6Sre6n3dP8jTHyIHI0PMGcFQ+Cvvp2R9kGrcY5nujf1X0qGZd+uMpDG7DvADEGv2D6Fn/IbIC00Kc9lFYOwIoZaJJCAAs1aqXprxOUuAKtkq3fh1A995/dDPr4xvMli1h7v1fs2+vJe443KVJnCzeA7uDQqxY6kSkA4q2bl/HpSRGreLWBUAchcHX/lTS/XQVhvBocM8mDLWRULjswsX6DoVmhjLdAUgVJZhJSBiv0bvplUA3n2799uwLub//HnMv6beW0bTrWSrwZ4LtLgCxk+MjVM0Rnw8zUnJUX+qJop4V1BIMHQs4paJBpi/N7a2+LogoM40TjeidA+UqBpsY/XpQFCV9x6IVWyRDWa5MVEKLS6hhjvzfhGrP3sV98C4CifPyBZ6GK8cfX2v2qVuCe/emkxlR3FIpO7gP82lVxOFeNT/StQzbQmMHwWnfwfbN4LhP806JSKNWMe1gFHvyKtWjX+OJAIDAUi64L9Po+YO3Ufx9pIYOpgDJGOJOoiiaxTx2iuSdsQsp+ZWDGDx1CYtLb/A18idY2782cI6A4MGgR8fX3ETlvc/ssdtZ7l2N0zYG51X5V+hmPEa6VlTHyL/oOu7DGXm6JdQK3hJS9awFwflS/FVNoCzWCYD7CPQUAuxJTy8byTzbaIDN6eHP+W03dnVtRVdSUxmngMkJAAVqAMfNP97soT8zO+W88IkbU4Ov9DVa9Ah63VdwMOny6X9h+XcVgNhE8IskNg+AVWeY3XwHrg4B4ZyOPL3LIPIgC47G9neIbDIF+XufDYrUucsIpGSH4mYCQrDnJuEGzT+eQiYB51AbBeIi+MhS5SlUJmsNIHsZGno82sNc+uA3gmfrvhCUrxQkLc5ole36W81+dx3LsARfc/qxRoxuG/V+Qh0Ayn841vsJJSF0U4GnF2b2tRPIyNSi+IpmL8YmtsKq3gPw5M93c40u01JxmYKvLosMFZ2aaMKJ/cyfc5abbbjT7Ed3oRABj45OAUIgmM6cesNt3B5ezn03o6WGAqtY9e/MwsvKIMf6iDc6L7trk/5Bvt5PUP3W7W/nFF19oNnYpflfEWjyUw/nfJbaRwbQOc+v3TKQ66IMcksgUs4A/Ue2BI9z772RV7XuC+QWAsGMuWafJ63XkwGOMHT0qLUoAS7JONrH3xGMWFAqKjRyIgyyigDwaR1bg3OuOTxXT3mPCu45w9TIFCCdVAPt3kx24rwrAIPLy/F3EgMgYm5/C8/ml5nduc7sp/cHJ0aAgClj3nJez7qbeZcCSj9XU4z0XkIPo/IwtUOxT88BgMQQ1aNseSmMWzGRRdsV5H3IEklnT/UEXRVYwwkUvDGwDoCaTqY+V6Gha75w8BeXbuu6KJ24ckiS0wjuANPBwqVmd3yGgFC1f+Sq0KGKDDxq0+7pa8x+70s8w7915EqgpgUViBtfMLubKUNVv+4CCkVXqV/vEfSyGkkmDyo2bUdBqkUQYfs66QIb9PqXn1JmHhecazwHAFAQRkl3DR1vhQ+hNE+UjyY3AFRIeYe5bxW3mC1dafZPV+MRAvQRtu4VMe8gBRiTBI4nAECcQqxYL6P6uR+ZLafw6ycLREk8IuFO6VvB18e3s5uYhuhHabz1ZYBEPypYPelWcNpingEAhHjxqZ/Ra/8x7fPplzuBMXXuOzr6dnICwAWKoVOLc5zx3vtEJUdVvfwEnr9fQ/FHFX/ux2HhvEuvihp0/FKz3/kUv0X4UNjuWoOgaldP+BaynUUABpguHCFDS9B6DO0drmyhl1O6N4U8o9xo/hZ42lsAGmAWGDzpvQmtBtaTFfybQM5uGA5zndSaz8V61b6MNDkBIMfrRyXaWoJR6B2gETmHjxy5cAmvcf0B219TJAIIn94FBi30LD+X7wkAgELzp3h6OaXRrzsNkdJ9DymbbJ2/N1J/YMwa+IyFNAVUo/D+nxNU0rp7dxFBwukUaoCmEwEhxauyVh7EnNMagOJeIQXKS5MPABrJA6TApjPNLv3jIDD+lk4LNS89zrLtwzgTx4IR2/AIr47/DTuAxo9c+WwWkdP0HiYFNQ0j184f9VcJ7yHAcCr9nXZxWBfArfWCjnf4kscXA75hAhIcKAPo7Se9gbR3B6+gLQr0UbCrAEAzwG1cEAqizSu7Z1u4+9sIALmjFwDMO8nsivU4ijQohym4KqK6mVd/JQDgnEaaN71E8LoYqRw4NvER1GkM20T+g79qJk8PAcCJ51M/fBqh/kJAteNNs/8UAOh7tCR9dJmAelB/ILX5N34auVOpm+Kah/3pwkZMcMyOf9jZkh5o2Ew+kvF6PcsFXgd8VOyJog6R9t3M0bptipNeP09MCJX4flK2SOK8SPeFFNc6xj/YIdn7yAIiV6sEuzYb0NZrjglJ5zRt7H07uAPQfmi2Zyn1dvJNAd5COcM7y2/dOSEAcnMm2wFGrp8i1O4d5jKHGjyF1/nDQlsHOE4M668QY8I26eIebLHd83pwkWT7fppXkMWYyqKkX1ZvJeuoztHTwirO6zcYHSK9cRwOtCNHhcz4aPICoKhdoRPyvsjvBFf4DKFHviqkBsgQjsQXgsCv8g1LJ5zW281x0rv5kpNHVpzhGMf+qeDe1gCo7kFVqPOsZjKA5rEI9aF3J30qMuI9SObQ7BHN1TKDOtdq0Ffyx0GTGwB+pEQNlO98LOWIalKoc6pnCp2r/59AReCBNv6s5OORwe40nh1QWrg29aE7AKX8GfPUOJwUEGEoD5rhp495pLUM9aW3e9xagCIXUvP8oMbxx9oeIOAHnuTOg3NHuGbVpymIlwNCCkqXmbBPNcS2p4K7C70Wpz7GSJMTAIqhbtGiqd0bWMtQEOinHEfxt4vij1FQExkeYfztIIUUIqyDlTxHcly4q28cNb+f699gBJ5A8HGDfLiE/Th1s4yrETgMZHGmYsd0qMfCerV878s8FiZt6xbVU3RhyOOzCwCwSu2+DbwbANy43uzkcwEh6d7roJdd7sPuR7m9bOYlGE0HY6SI58YooRyX1eAw/S6A3vl35LccnLYmAMB2jH+VUXHOpYxo3QHAowBrlOjbx+0EXgN666v8gfzoEZ9uIa/+GkGhfc9bZm8zP6+9AwCscqx5oOho22vBkm1EhYAp4V+l6KrZZADs6ekLLzqKsG7mfczKL20rO2mdQK/D66USffSVMresLHEyeuw0+TKAAqQfhmh9gcq5LfiqlvzlAsh29almtz/PFz8BwJzFfPfyosB6+cHxsT24j69p/Tu87P/i22YfW8fj1+NDkIQOO/9SFpIAx+63WTMgI+h3AeRsCfH96cevf/V08P3HQaaCMRFzi1YYlUW69wcSvJ5Red6+ts3BlKG0LlXzX1YJ9dI1zgSO/TYqZ5T7ZQBA6ODRKBK/pJp7eGW1jb8MAKBn/v6r5QLI6rOCz7A+EOIfuGwhtW9mVC87hQzwitn/Pc73+P8kBIAuEi8b/aiEPnlSI+fkdPX3OkB79WF0YLrxv2ngeWE7Nkke5NcQ2rdycB7HBS5Wm5ad9b1F8OLmdadOyKvNsOtoCMVzZsxU2ilASmrezn9CDRU0VVnOlrDN8Yb7+sUPP9+LN8fkTYFsP/l+MG8qGO7rXJ6fAAkUfq1A12hfTwR7mbN/TDpnbceO4Mz5zJE//FPS/Eucx9xoX15GXo7UDIOvlbsHbyJz0Dawhz/SMexfuuraaBtHxUm80P5wCsj7h3YvS6L76VuPjpWIvL98n15v9+so4XXOn+IdO5UOAEKn7NT9t4oVBcNXzlqUUXp1/oNP57HV9FsCIgVY/CK1KQjTFrDk+6jZv32D1MlkrQc46kMfJzvcRttU+T9E8F95hCp6EYHjOlko0XdcwbTBtCKd1L+Tw9bJgiEqR0ux//zXvGbO/F+3NLBL87DXN28b12t5Wnbp+qJE4GXq3t0Bh653OoS6OJ04pQzQ/jQZgHZNAfKnX9CSj5xf1U/Yr84Ho0o7Y6LSTQF6D57lbdu/neVTUrC+sSv0yli9o9/TEQRC6+ODTIj18LYy/+6eS4UbjgytvbfjfFXOGnWatzfcRtsmfuXjs6T9M7iOoa2nZ5Ir0n26fiSqhZT/0wfMnvkOxd8S2pGjoOhp39RmKn6Obznb7JOcP+tC1uUX41zMlxwBTk/dVHO89ixLv7fzIAqwzAJE/S2Bj/X7fttfJ7MwHbh3CJCtalw/OaeUPRjaIJ3i5L/+9c4Glq4/ij4YrxVGDxr5SeBq3Yo86pJa0o6+sVyHoN0b6XMGPkS+59dX8rsAk0A1zjeGxvcrYXFDhcwhtB5U3qRo0o8f+XXvShSOP90abIQH44KvyrKPYZUAp5JFE5EcU0swu7YRQI4Xr+HNXwKgH16awnVKn3oHcBf8Wx4LFk9mw98PvxsZXK+t5FTT1yAVdOsubrEWmi09G6CwrWsKnj3ohye2b0HWL4O0Xwf4+uF1Tg/l5ADrUA0y6VfDXlmhkixTAQCD9Ma2GMk3XDeIDJeSpBe7kq92VycgpxLARv00KDsBvSsK4RW5OwvxqTCVkLFTiQEgRXDKEJ+o41xxNsA5OS5KOHNIqU2GhU52N+Ti9cdsq7if0zdue1uCRRnZzQBypFGgEVi3AB62AwRyBIXy3bd2AY8eAeun6fjn5CiZSIb7LEdNnJvjkwcRu25fnRFIr5sLnHT1yrB7VBJ4JCME0Ahe6SmlZLsn36c/Fo/ni/vT8yTflgEAUi5Mz3k9ZFAhJylDaGTkGdkpxsspfSNYQXS3a+oDXj0w0fTj1sWHCYoKje1r5EoOH6crumnNXlOP5BUl9Sn7oiS7kvar6wrJ8PIK2S7A6ROn0fYbvz44xhOlpkJGFOsDBCs9JyIcr/lO3wKOYsnFIx6UYwlUwCkYdbfhKS9HO8V0KjTiivF6wfFtIRlxnuix+Av1Uagtel2y/TIAQB2PRrmkvBG+EfGOnEtkd8g/ajmj7aeQMmORMZZrCvU9sq1QbhnJlbWk1gMZAFIb2mSGZQBI5qfUcmUASG1okxmWASCZn1LLlQEgtaFNZlgGgGR+Si1XBoDUhjaZYRkAkvkptVwZAFIb2mSGZQBI5qfUcmUASG1okxmWASCZn1LLlQEgtaFNZlgGgGR+Si1XBoDUhjaZYRkAkvkptVwZAFIb2mSGZQBI5qfUcmUASG1okxmWASCZn1LLlQEgtaFNZlgGgGR+Si1XBoDUhjaZYRkAkvkptVwZAFIb2mSGZQBI5qfUcmUASG1okxmWASCZn1LLlQEgtaFNZlgGgGR+Si1XBoDUhjaZYf8PWUuG7Nfc1twAAAAASUVORK5CYII=
+serial: true
+variables:
+- name: postgres_password
+  type: password
+- name: token_signing_key
+  type: rsa
+- name: tsa_host_key
+  type: ssh
+- name: worker_key
+  type: ssh
+releases:
+- name: bpm
+  version: 1.1.21
+  file: bpm-1.1.21.tgz
+- name: concourse
+  version: 7.9.0
+  file: concourse-7.9.0.tgz
+- name: postgres
+  version: '44'
+  file: postgres-44.tgz
+stemcell_criteria:
+  os: ubuntu-jammy
+  version: '1'
+  enable_patch_security_updates: true
+property_blueprints:
+- name: credentials
+  type: simple_credentials
+  configurable: true
+  optional: false
+  freeze_on_deploy: false
+  unique: false
+- name: external_url
+  type: string
+  default: concourse.example.com
+  configurable: true
+  optional: false
+  freeze_on_deploy: false
+  unique: false
+- name: tls_credentials
+  type: rsa_cert_credentials
+  configurable: true
+  optional: false
+  freeze_on_deploy: false
+  unique: false
+- name: auth_selector
+  type: selector
+  default: internal
+  configurable: true
+  optional: false
+  freeze_on_deploy: false
+  unique: false
+  option_templates:
+  - name: internal_option
+    select_value: internal
+    named_manifests:
+    - name: ldap_auth_snippet
+      manifest: |
+        {}
+    - name: main_team_auth_snippet
+      manifest: |
+        local:
+          users:
+          - (( .properties.credentials.identity ))
+  - name: ldap_option
+    select_value: ldap
+    property_blueprints:
+    - name: host
+      type: string
+      configurable: true
+      optional: false
+      freeze_on_deploy: false
+      unique: false
+    - name: display_name
+      type: string
+      default: LDAP
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: bind_dn
+      type: string
+      configurable: true
+      optional: false
+      freeze_on_deploy: false
+      unique: false
+    - name: bind_pw
+      type: secret
+      configurable: true
+      optional: false
+      freeze_on_deploy: false
+      unique: false
+    - name: insecure_no_ssl
+      type: boolean
+      default: false
+      configurable: true
+      optional: false
+      freeze_on_deploy: false
+      unique: false
+    - name: insecure_skip_verify
+      type: boolean
+      default: false
+      configurable: true
+      optional: false
+      freeze_on_deploy: false
+      unique: false
+    - name: start_tls
+      type: boolean
+      default: false
+      configurable: true
+      optional: false
+      freeze_on_deploy: false
+      unique: false
+    - name: ca_cert
+      type: text
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: user_search_base_dn
+      type: string
+      configurable: true
+      optional: false
+      freeze_on_deploy: false
+      unique: false
+    - name: user_search_filter
+      type: string
+      default: "(objectClass=inetOrgPerson)"
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: user_search_username
+      type: string
+      default: uid
+      configurable: true
+      optional: false
+      freeze_on_deploy: false
+      unique: false
+    - name: user_search_id_attr
+      type: string
+      default: uid
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: user_search_email_attr
+      type: string
+      default: mail
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: user_search_name_attr
+      type: string
+      default: displayName
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: group_search_base_dn
+      type: string
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: group_search_filter
+      type: string
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: group_search_user_attr
+      type: string
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: group_search_group_attr
+      type: string
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: group_search_name_attr
+      type: string
+      configurable: true
+      optional: true
+      freeze_on_deploy: false
+      unique: false
+    - name: main_team_user
+      type: string
+      configurable: true
+      optional: false
+      freeze_on_deploy: false
+      unique: false
+    named_manifests:
+    - name: ldap_auth_snippet
+      manifest: |
+        host: (( .properties.auth_selector.ldap_option.host.value ))
+        display_name: (( .properties.auth_selector.ldap_option.display_name.value ))
+        bind_dn: (( .properties.auth_selector.ldap_option.bind_dn.value ))
+        bind_pw: (( .properties.auth_selector.ldap_option.bind_pw.value ))
+        insecure_no_ssl: (( .properties.auth_selector.ldap_option.insecure_no_ssl.value ))
+        insecure_skip_verify: (( .properties.auth_selector.ldap_option.insecure_skip_verify.value ))
+        start_tls: (( .properties.auth_selector.ldap_option.start_tls.value ))
+        ca_cert: (( .properties.auth_selector.ldap_option.ca_cert.value ))
+        user_search_base_dn: (( .properties.auth_selector.ldap_option.user_search_base_dn.value ))
+        user_search_filter: (( .properties.auth_selector.ldap_option.user_search_filter.value ))
+        user_search_username: (( .properties.auth_selector.ldap_option.user_search_username.value ))
+        user_search_id_attr: (( .properties.auth_selector.ldap_option.user_search_id_attr.value ))
+        user_search_email_attr: (( .properties.auth_selector.ldap_option.user_search_email_attr.value ))
+        user_search_name_attr: (( .properties.auth_selector.ldap_option.user_search_name_attr.value ))
+        group_search_base_dn: (( .properties.auth_selector.ldap_option.group_search_base_dn.value ))
+        group_search_filter: (( .properties.auth_selector.ldap_option.group_search_filter.value ))
+        group_search_user_attr: (( .properties.auth_selector.ldap_option.group_search_user_attr.value ))
+        group_search_group_attr: (( .properties.auth_selector.ldap_option.group_search_group_attr.value ))
+        group_search_name_attr: (( .properties.auth_selector.ldap_option.group_search_name_attr.value ))
+    - name: main_team_auth_snippet
+      manifest: |
+        ldap:
+          users:
+          - (( .properties.auth_selector.ldap_option.main_team_user.value ))
+        local:
+          users:
+          - (( .properties.credentials.identity ))
+form_types:
+- property_inputs:
+  - reference: ".properties.credentials"
+    label: Local Concourse User
+    description: Create local login user credentials
+  - reference: ".properties.external_url"
+    label: Web VM domain
+    description: Enter external url for web UI
+  - reference: ".properties.tls_credentials"
+    label: TLS Certificate
+    description: TLS Certificate
+  - reference: ".properties.auth_selector"
+    label: Authentication
+    description: Choose between local user authentication and LDAP. Local users remain
+      able to log in when LDAP is selected, and you can switch back to local-only
+      authentication at any time.
+    selector_property_inputs:
+    - reference: ".properties.auth_selector.internal_option"
+      label: Local user authentication
+    - reference: ".properties.auth_selector.ldap_option"
+      label: LDAP authentication
+      property_inputs:
+      - reference: ".properties.auth_selector.ldap_option.host"
+        label: LDAP Server Host
+        description: Host and optional port of the LDAP server, e.g. ldap.example.com:636.
+          Do not include a scheme. If the port is omitted it defaults to 389, or 636
+          when TLS is used.
+      - reference: ".properties.auth_selector.ldap_option.display_name"
+        label: Display Name
+        description: Connector name shown on the Concourse login page.
+      - reference: ".properties.auth_selector.ldap_option.bind_dn"
+        label: Bind DN
+        description: DN of the service account used to search for users, e.g. uid=admin,ou=Users,dc=example,dc=com.
+      - reference: ".properties.auth_selector.ldap_option.bind_pw"
+        label: Bind Password
+        description: Password for the Bind DN service account.
+      - reference: ".properties.auth_selector.ldap_option.insecure_no_ssl"
+        label: Connect Without TLS
+        description: Required when the LDAP host is not using TLS (typically port 389).
+      - reference: ".properties.auth_selector.ldap_option.insecure_skip_verify"
+        label: Skip TLS Certificate Verification
+      - reference: ".properties.auth_selector.ldap_option.start_tls"
+        label: Use StartTLS
+        description: Connect on an insecure port and negotiate TLS via StartTLS.
+      - reference: ".properties.auth_selector.ldap_option.ca_cert"
+        label: CA Certificate
+        description: PEM-encoded CA certificate used to verify the LDAP server certificate.
+      - reference: ".properties.auth_selector.ldap_option.user_search_base_dn"
+        label: User Search Base DN
+        description: Base DN to search for users, e.g. ou=Users,dc=example,dc=com.
+      - reference: ".properties.auth_selector.ldap_option.user_search_filter"
+        label: User Search Filter
+        description: Optional filter applied when searching for users, e.g. (objectClass=inetOrgPerson).
+      - reference: ".properties.auth_selector.ldap_option.user_search_username"
+        label: Username Attribute
+        description: Attribute matched against the username entered at login, e.g.
+          uid or sAMAccountName.
+      - reference: ".properties.auth_selector.ldap_option.user_search_id_attr"
+        label: User ID Attribute
+      - reference: ".properties.auth_selector.ldap_option.user_search_email_attr"
+        label: User Email Attribute
+      - reference: ".properties.auth_selector.ldap_option.user_search_name_attr"
+        label: User Display Name Attribute
+      - reference: ".properties.auth_selector.ldap_option.group_search_base_dn"
+        label: Group Search Base DN
+        description: Base DN to search for groups, e.g. ou=Groups,dc=example,dc=com.
+          Leave blank to disable group search.
+      - reference: ".properties.auth_selector.ldap_option.group_search_filter"
+        label: Group Search Filter
+        description: Optional filter applied when searching for groups, e.g. (objectClass=groupOfNames).
+      - reference: ".properties.auth_selector.ldap_option.group_search_user_attr"
+        label: Group Search User Attribute
+        description: User attribute matched against the group attribute, e.g. DN.
+      - reference: ".properties.auth_selector.ldap_option.group_search_group_attr"
+        label: Group Search Group Attribute
+        description: Group attribute containing the user match, e.g. member.
+      - reference: ".properties.auth_selector.ldap_option.group_search_name_attr"
+        label: Group Name Attribute
+        description: Group attribute used as the group name, e.g. cn.
+      - reference: ".properties.auth_selector.ldap_option.main_team_user"
+        label: Main Team LDAP User
+        description: LDAP username granted access to the Concourse main team. Additional
+          users and groups can be added later with fly set-team.
+  name: settings
+  label: Settings
+  description: Edit Concourse Settings
+job_types:
+- name: web
+  resource_label: web
+  manifest: |
+    add_local_users:
+    - ((.properties.credentials.identity)):((.properties.credentials.password))
+    external_url: (( .properties.external_url.value ))
+    ldap_auth: (( .properties.auth_selector.selected_option.parsed_manifest(ldap_auth_snippet) ))
+    main_team:
+      auth: (( .properties.auth_selector.selected_option.parsed_manifest(main_team_auth_snippet) ))
+    postgresql:
+      database: atc
+      role:
+        name: concourse
+        password: (((postgres_password)))
+    tls:
+      bind_port: 443
+      cert:
+        certificate: ((.properties.tls_credentials.cert_pem))
+        private_key: ((.properties.tls_credentials.private_key_pem))
+    token_signing_key: (((token_signing_key)))
+    worker_gateway:
+      authorized_keys: |
+        (((worker_key.public_key)))
+      host_key: (((tsa_host_key)))
+  max_in_flight: 1
+  single_az_only: false
+  errand: false
+  run_pre_delete_errand_default: true
+  run_post_deploy_errand_default: true
+  templates:
+  - name: web
+    release: concourse
+  - name: bpm
+    release: bpm
+  instance_definition:
+    default: 1
+    configurable: true
+  resource_definitions:
+  - name: ram
+    default: 512
+    configurable: true
+    constraints:
+      min: 0
+  - name: ephemeral_disk
+    default: 4096
+    configurable: true
+    constraints:
+      min: 4096
+  - name: persistent_disk
+    default: 0
+    configurable: true
+    constraints:
+      min: 0
+  - name: cpu
+    default: 1
+    configurable: true
+    constraints:
+      min: 1
+  property_blueprints:
+  - name: vm_credentials
+    type: salted_credentials
+    default:
+      identity: vcap
+    configurable: false
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+- name: worker
+  resource_label: worker
+  manifest: |
+    drain_timeout: 10m
+    worker_gateway:
+      worker_key: (((worker_key)))
+  max_in_flight: 1
+  single_az_only: false
+  errand: false
+  run_pre_delete_errand_default: true
+  run_post_deploy_errand_default: true
+  templates:
+  - name: worker
+    release: concourse
+  instance_definition:
+    default: 2
+    configurable: true
+  resource_definitions:
+  - name: ram
+    default: 512
+    configurable: true
+    constraints:
+      min: 0
+  - name: ephemeral_disk
+    default: 4096
+    configurable: true
+    constraints:
+      min: 4096
+  - name: persistent_disk
+    default: 0
+    configurable: true
+    constraints:
+      min: 0
+  - name: cpu
+    default: 1
+    configurable: true
+    constraints:
+      min: 1
+  property_blueprints:
+  - name: vm_credentials
+    type: salted_credentials
+    default:
+      identity: vcap
+    configurable: false
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+- name: db
+  resource_label: db
+  manifest: |
+    databases:
+      databases:
+      - name: atc
+      port: 5432
+      roles:
+      - name: concourse
+        password: (((postgres_password)))
+  max_in_flight: 1
+  single_az_only: false
+  errand: false
+  run_pre_delete_errand_default: true
+  run_post_deploy_errand_default: true
+  templates:
+  - name: postgres
+    release: postgres
+  instance_definition:
+    default: 1
+    configurable: true
+  resource_definitions:
+  - name: ram
+    default: 512
+    configurable: true
+    constraints:
+      min: 0
+  - name: ephemeral_disk
+    default: 4096
+    configurable: true
+    constraints:
+      min: 4096
+  - name: persistent_disk
+    default: 4096
+    configurable: true
+    constraints:
+      min: 4096
+  - name: cpu
+    default: 1
+    configurable: true
+    constraints:
+      min: 1
+  property_blueprints:
+  - name: vm_credentials
+    type: salted_credentials
+    default:
+      identity: vcap
+    configurable: false
+    optional: false
+    freeze_on_deploy: false
+    unique: false

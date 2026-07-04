@@ -1,0 +1,48 @@
+---
+name: worker
+resource_label: worker
+manifest: |
+  drain_timeout: 10m
+  worker_gateway:
+    worker_key: (((worker_key)))
+max_in_flight: 1
+single_az_only: false
+errand: false
+run_pre_delete_errand_default: true
+run_post_deploy_errand_default: true
+templates:
+- name: worker
+  release: concourse
+instance_definition:
+  default: 2
+  configurable: true
+resource_definitions:
+- name: ram
+  default: 512
+  configurable: true
+  constraints:
+    min: 0
+- name: ephemeral_disk
+  default: 4096
+  configurable: true
+  constraints:
+    min: 4096
+- name: persistent_disk
+  default: 0
+  configurable: true
+  constraints:
+    min: 0
+- name: cpu
+  default: 1
+  configurable: true
+  constraints:
+    min: 1
+property_blueprints:
+- name: vm_credentials
+  type: salted_credentials
+  default:
+    identity: vcap
+  configurable: false
+  optional: false
+  freeze_on_deploy: false
+  unique: false

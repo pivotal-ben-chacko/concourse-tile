@@ -1,0 +1,52 @@
+---
+name: db
+resource_label: db
+manifest: |
+  databases:
+    databases:
+    - name: atc
+    port: 5432
+    roles:
+    - name: concourse
+      password: (((postgres_password)))
+max_in_flight: 1
+single_az_only: false
+errand: false
+run_pre_delete_errand_default: true
+run_post_deploy_errand_default: true
+templates:
+- name: postgres
+  release: postgres
+instance_definition:
+  default: 1
+  configurable: true
+resource_definitions:
+- name: ram
+  default: 512
+  configurable: true
+  constraints:
+    min: 0
+- name: ephemeral_disk
+  default: 4096
+  configurable: true
+  constraints:
+    min: 4096
+- name: persistent_disk
+  default: 4096
+  configurable: true
+  constraints:
+    min: 4096
+- name: cpu
+  default: 1
+  configurable: true
+  constraints:
+    min: 1
+property_blueprints:
+- name: vm_credentials
+  type: salted_credentials
+  default:
+    identity: vcap
+  configurable: false
+  optional: false
+  freeze_on_deploy: false
+  unique: false

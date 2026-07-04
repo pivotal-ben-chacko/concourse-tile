@@ -1,0 +1,8 @@
+---
+name: external_url
+type: string
+default: concourse.example.com
+configurable: true
+optional: false
+freeze_on_deploy: false
+unique: false
