@@ -1,0 +1,8 @@
+---
+name: tagged_worker_tag
+type: string
+default: dedicated
+configurable: true
+optional: false
+freeze_on_deploy: false
+unique: false

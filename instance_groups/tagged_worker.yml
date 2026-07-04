@@ -1,8 +1,10 @@
 ---
-name: worker
-resource_label: worker
+name: tagged_worker
+resource_label: tagged worker
 manifest: |
   drain_timeout: 10m
+  tags:
+  - (( .properties.tagged_worker_tag.value ))
   worker_gateway:
     worker_key: (((worker_key)))
 max_in_flight: 1
@@ -14,7 +16,7 @@ templates:
 - name: worker
   release: concourse
 instance_definition:
-  default: 2
+  default: 0
   configurable: true
   constraints:
     min: 0

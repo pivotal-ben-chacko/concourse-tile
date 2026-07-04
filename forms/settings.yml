@@ -81,6 +81,11 @@ property_inputs:
       label: Main Team LDAP User
       description: LDAP username granted access to the Concourse main team. Additional
         users and groups can be added later with fly set-team.
+- reference: ".properties.tagged_worker_tag"
+  label: Tagged Worker Pool Tag
+  description: 'Tag advertised by workers in the tagged worker instance group. Pipeline
+    steps opt in with tags: [<value>]. Scale the tagged pool (and optionally set the
+    untagged worker pool to 0) on the Resource Config page.'
 name: settings
 label: Settings
 description: Edit Concourse Settings

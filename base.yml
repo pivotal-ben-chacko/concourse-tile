@@ -32,9 +32,13 @@ property_blueprints:
 - $( property "external_url" )
 - $( property "tls_credentials" )
 - $( property "auth_selector" )
+- $( property "secrets_selector" )
+- $( property "tagged_worker_tag" )
 form_types:
 - $( form "settings" )
+- $( form "secrets" )
 job_types:
 - $( instance_group "web" )
 - $( instance_group "worker" )
+- $( instance_group "tagged_worker" )
 - $( instance_group "db" )

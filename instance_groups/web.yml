@@ -4,6 +4,7 @@ resource_label: web
 manifest: |
   add_local_users:
   - ((.properties.credentials.identity)):((.properties.credentials.password))
+  credhub: (( .properties.secrets_selector.selected_option.parsed_manifest(credhub_snippet) ))
   external_url: (( .properties.external_url.value ))
   ldap_auth: (( .properties.auth_selector.selected_option.parsed_manifest(ldap_auth_snippet) ))
   main_team:
@@ -19,6 +20,7 @@ manifest: |
       certificate: ((.properties.tls_credentials.cert_pem))
       private_key: ((.properties.tls_credentials.private_key_pem))
   token_signing_key: (((token_signing_key)))
+  vault: (( .properties.secrets_selector.selected_option.parsed_manifest(vault_snippet) ))
   worker_gateway:
     authorized_keys: |
       (((worker_key.public_key)))
