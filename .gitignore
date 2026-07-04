@@ -2,3 +2,4 @@ releases/*.tgz
 *.pivotal
 bin/
 metadata/
+scripts/.pylib/
