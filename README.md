@@ -28,6 +28,36 @@ releases/              Release tarballs (gitignored; restore with `kiln fetch`)
 bin/kiln               kiln binary (gitignored; darwin-arm64 from the kiln GitHub releases)
 ```
 
+## How and why the tile is built with kiln
+
+**What a tile actually is.** A `.pivotal` file is nothing exotic — it is a zip archive with a fixed folder layout:
+
+```
+metadata/metadata.yml    one big YAML file describing the whole product
+releases/*.tgz           the BOSH release tarballs containing the actual software
+migrations/              scripts for upgrading settings between tile versions
+```
+
+The `metadata.yml` is the heart of it. It tells Ops Manager everything: what forms to show the operator, what properties exist, what VMs to create, and how to turn the operator's form answers into a BOSH deployment manifest. For this tile that file is ~1,900 lines. You *could* maintain it by hand — this project originally did — but a file that long, with an embedded base64 icon and repeated boilerplate, is easy to break and hard to review.
+
+**What kiln does.** [kiln](https://github.com/pivotal-cf/kiln) is the tile build tool. `kiln bake` is essentially a smart "assemble and zip" step. When you run it, it:
+
+1. **Starts from `base.yml`**, a template of the metadata with placeholders like `$( version )`, `$( icon )`, and `$( property "auth_selector" )` where content should be injected.
+2. **Fills in each placeholder**: the version comes from the `version` file; the icon is read from `icon.png` and base64-encoded automatically (no hand-pasting a wall of base64); each `$( property ... )`, `$( form ... )`, and `$( instance_group ... )` is replaced with the contents of the matching file in `properties/`, `forms/`, or `instance_groups/`.
+3. **Resolves the releases** from `Kilnfile.lock`, which pins each BOSH release to an exact version *and* SHA1 checksum. Kiln verifies the tarballs in `releases/` match those checksums, and reads each tarball's internal manifest so the metadata's release list can never drift from what is actually bundled.
+4. **Stamps provenance**: the current git commit SHA is embedded in the metadata (`kiln_metadata`), so any tile found in the wild can be traced back to the exact source that produced it. This is why kiln requires the project to be a git repository.
+5. **Zips it all up** in the layout above and writes the `.pivotal`.
+
+**Why this beats hand-editing one big YAML file:**
+
+- *Small reviewable pieces.* A change to LDAP settings touches `properties/auth_selector.yml` and `forms/settings.yml` — a focused diff — instead of edits scattered through a 1,900-line file.
+- *Reproducible builds.* Anyone who clones this repo can run `kiln fetch` (which re-downloads the exact pinned releases and verifies their checksums) followed by `kiln bake` and get the same tile. Nothing depends on files that happen to be lying around on someone's laptop.
+- *Pinned, verified ingredients.* `Kilnfile.lock` works like a package-manager lockfile: bumping Concourse is an explicit, reviewable one-line change, and a corrupted or tampered download fails the checksum comparison instead of silently shipping.
+- *No error-prone mechanical steps.* Version, icon encoding, release filenames, and zip layout are all derived automatically — the categories of mistake (stale version string, wrong base64, tarball/metadata mismatch) simply can't happen.
+- *Traceability.* The git SHA baked into every artifact answers "which source built the tile that's running in prod?" definitively.
+
+The trade-off is one extra concept (the template placeholders) and the git requirement — cheap compared to what it prevents.
+
 ## Prerequisites
 
 - `./bin/kiln` — download from [kiln releases](https://github.com/pivotal-cf/kiln/releases) for your platform if missing
