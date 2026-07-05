@@ -1,0 +1,28 @@
+---
+name: routing
+label: Routing
+description: Configure how clients reach the Concourse web UI
+property_inputs:
+- reference: ".properties.gorouter_selector"
+  label: Web UI Access
+  description: Choose how the Concourse web UI is reached. Direct uses your own DNS
+    record pointing at the web VM and the TLS certificate configured on the Settings
+    page. GoRouter registers a route under the TAS system domain so the platform's
+    load balancer, DNS wildcard, and routers front Concourse. Switchable at any time.
+  selector_property_inputs:
+  - reference: ".properties.gorouter_selector.direct_option"
+    label: Direct (own DNS and TLS certificate)
+  - reference: ".properties.gorouter_selector.gorouter_option"
+    label: Register with GoRouter
+    property_inputs:
+    - reference: ".properties.gorouter_selector.gorouter_option.route_hostname"
+      label: Route Hostname
+      description: Registered under the TAS system domain, e.g. "concourse" becomes
+        concourse.<system-domain>. Set the Web VM domain on the Settings page to the
+        same FQDN.
+    - reference: ".properties.gorouter_selector.gorouter_option.server_cert_domain_san"
+      label: TLS Certificate SAN
+      description: A subject alternative name present in the Concourse TLS certificate
+        (usually the same FQDN as the route). GoRouter validates the TLS connection to
+        the web VM against this name, so the certificate's CA must also be added to
+        "CA certificates trusted by Router" in the TAS networking settings.

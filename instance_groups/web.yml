@@ -9,6 +9,12 @@ manifest: |
   ldap_auth: (( .properties.auth_selector.selected_option.parsed_manifest(ldap_auth_snippet) ))
   main_team:
     auth: (( .properties.auth_selector.selected_option.parsed_manifest(main_team_auth_snippet) ))
+  nats:
+    tls:
+      enabled: true
+      client_cert: (( ..cf.properties.nats_client_cert.cert_pem ))
+      client_key: (( ..cf.properties.nats_client_cert.private_key_pem ))
+  route_registrar: (( .properties.gorouter_selector.selected_option.parsed_manifest(route_registrar_snippet) ))
   postgresql:
     database: atc
     role:
@@ -35,6 +41,14 @@ templates:
   release: concourse
 - name: bpm
   release: bpm
+- name: route_registrar
+  release: routing
+  consumes: |
+    nats: nil
+    nats-tls:
+      from: nats-tls
+      deployment: (( ..cf.deployment_name ))
+    routing_api: nil
 instance_definition:
   default: 1
   configurable: true

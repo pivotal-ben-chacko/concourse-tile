@@ -8,6 +8,9 @@ metadata_version: 3.0.3
 original_metadata_version: '1.8'
 service_broker: false
 opsmanager_syslog: false
+requires_product_versions:
+- name: cf
+  version: '>=1.0'
 icon_image: $( icon )
 serial: true
 variables:
@@ -23,6 +26,7 @@ releases:
 - $( release "bpm" )
 - $( release "concourse" )
 - $( release "postgres" )
+- $( release "routing" )
 stemcell_criteria:
   os: ubuntu-jammy
   version: "1"
@@ -33,10 +37,12 @@ property_blueprints:
 - $( property "tls_credentials" )
 - $( property "auth_selector" )
 - $( property "secrets_selector" )
+- $( property "gorouter_selector" )
 - $( property "tagged_worker_tag" )
 form_types:
 - $( form "settings" )
 - $( form "secrets" )
+- $( form "routing" )
 job_types:
 - $( instance_group "web" )
 - $( instance_group "worker" )
