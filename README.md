@@ -126,7 +126,8 @@ The **Routing** form controls how clients reach the web UI — a selector, switc
 The **Pipeline Secrets** form configures the credential manager backing `((var))` references in pipelines — a selector with three options, switchable at any time:
 
 - **None** (default) — no credential manager.
-- **CredHub** — server URL, UAA client ID/secret (needs `credhub.read` scope), CA cert or skip-verify, and a path prefix (default `/concourse`; secrets resolve at `<prefix>/TEAM/PIPELINE/name`, then `<prefix>/TEAM/name`).
+- **Colocated CredHub** — a self-contained CredHub + UAA pair runs on the web VM (UAA is CredHub's OAuth server only — Concourse login auth is unaffected). Zero fields to fill in: all certificates, client secrets, and the encryption password are auto-generated BOSH variables with localhost SANs, storage lives in `uaa`/`credhub` databases on the tile's own postgres, and Concourse connects over `https://127.0.0.1:8844`. Note the UAA and CredHub jobs run on the web VM in *every* mode (BOSH cannot conditionally colocate jobs) — this option just controls whether Concourse uses them; budget ~1.5GB of web-VM RAM for the two JVMs (the tile's default is 4096MB, but existing installations keep their configured value — raise it in Resource Config before enabling).
+- **External CredHub** — server URL, UAA client ID/secret (needs `credhub.read` scope), CA cert or skip-verify, and a path prefix (default `/concourse`; secrets resolve at `<prefix>/TEAM/PIPELINE/name`, then `<prefix>/TEAM/name`).
 - **Vault** — server URL, a periodic client token, optional Vault Enterprise namespace, CA cert or skip-verify, and the same path-prefix scheme.
 
 ## How the auth selector works (for tile authors)
