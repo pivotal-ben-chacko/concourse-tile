@@ -1,5 +1,13 @@
 # Release Notes
 
+## 1.2.2 — 2026-07-07
+
+### Fixed: fresh installs fail with UAA unable to reach postgres
+
+Instance groups deployed in the order web, worker, tagged_worker, **db** — so on a fresh install (no existing db VM), UAA and CredHub started on the web VM before postgres existed and crashed the canary with `FlywaySqlException: Unable to obtain connection from database: Connection to q-s0.db...:5432 refused`. The concourse web job masked this ordering bug for years because it retries its database connection; UAA and CredHub fail hard.
+
+The **db instance group now deploys first**. Upgrades of existing installations were never affected (the db VM already exists), but the fix is correct for them too.
+
 ## 1.2.1 — 2026-07-07
 
 ### Removed: GoRouter route registration and the TAS dependency

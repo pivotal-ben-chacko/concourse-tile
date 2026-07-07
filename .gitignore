@@ -3,3 +3,6 @@ releases/*.tgz
 bin/
 metadata/
 scripts/.pylib/
+*.pivotal.part.*
+*.pivotal.tgz
+*.sha256
