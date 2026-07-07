@@ -1,5 +1,18 @@
 # Release Notes
 
+## 1.2.1 — 2026-07-07
+
+### Removed: GoRouter route registration and the TAS dependency
+
+The TAS (`cf`) tile was retired from the foundation, so Concourse 1.2.0's `requires_product_versions: cf` blocked deployment ("Product Concourse 7.9 depends on cf (>=1.0)"). This release removes everything that coupled the tile to TAS:
+
+- The `requires_product_versions: cf` declaration.
+- The **Routing** form and its Direct/GoRouter selector — direct access (your own DNS + the tile's TLS certificate) is again the only mode, as before 1.1.0.
+- The `route_registrar` job from the web VM, its NATS-TLS wiring, and the bundled routing-release (tile shrinks ~30MB).
+- A metadata migration deletes the stored `gorouter_selector` value on upgrade so no orphaned configuration is carried forward.
+
+The colocated CredHub feature from 1.2.0 is unaffected — it is fully self-contained. All 1.2.0 upgrade notes (web VM RAM ≥ 4GB) still apply.
+
 ## 1.2.0 — 2026-07-07
 
 ### New feature: Colocated CredHub pipeline secrets backend

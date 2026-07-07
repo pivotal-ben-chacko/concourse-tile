@@ -30,21 +30,6 @@ templates:
       host_key: (((tsa_host_key)))
 - name: bpm
   release: bpm
-- name: route_registrar
-  release: routing
-  consumes: |
-    nats: nil
-    nats-tls:
-      from: nats-tls
-      deployment: (( ..cf.deployment_name ))
-    routing_api: nil
-  manifest: |
-    nats:
-      tls:
-        enabled: true
-        client_cert: (( ..cf.properties.nats_client_cert.cert_pem ))
-        client_key: (( ..cf.properties.nats_client_cert.private_key_pem ))
-    route_registrar: (( .properties.gorouter_selector.selected_option.parsed_manifest(route_registrar_snippet) ))
 - name: uaa
   release: uaa
   manifest: |
