@@ -13,6 +13,8 @@ The TAS (`cf`) tile was retired from the foundation, so Concourse 1.2.0's `requi
 
 The colocated CredHub feature from 1.2.0 is unaffected — it is fully self-contained. All 1.2.0 upgrade notes (web VM RAM ≥ 4GB) still apply.
 
+**Restoring GoRouter later:** the feature cannot be dormant in the tile (the route_registrar job and its `nats-tls` link are active regardless of selector choice, so the tile hard-requires TAS whenever they are present). If a TAS tile is installed again, `git revert 0141de5` restores the complete, previously-deployed implementation (added in commit `33529c9`); bump the version, `kiln fetch && kiln bake`, upload.
+
 ## 1.2.0 — 2026-07-07
 
 ### New feature: Colocated CredHub pipeline secrets backend
