@@ -96,6 +96,31 @@ The trade-off is one extra concept (the template placeholders) and the git requi
    ssh ubuntu@192.168.2.85 'source ~/env.sh && om apply-changes --product-name concourse'
    ```
 
+## Publishing a tile to GitHub
+
+The `.pivotal` is ~2.3GB, which exceeds GitHub's limits (100MB per file in git history, 2GB per release asset) — so the binary is **never committed to git** (`.gitignore` enforces this). Instead, split it and attach the parts to a GitHub Release:
+
+```bash
+# split into parts under the 2GB asset limit, and checksum the original
+split -b 1500m concourse-<version>.pivotal concourse-<version>.pivotal.part.
+shasum -a 256 concourse-<version>.pivotal > concourse-<version>.pivotal.sha256
+
+# publish the release with the parts and checksum as assets
+gh release create v<version> \
+  concourse-<version>.pivotal.part.* concourse-<version>.pivotal.sha256 \
+  --title "Concourse tile <version>" --notes-file RELEASE_NOTES.md
+```
+
+To download and reassemble:
+
+```bash
+gh release download v<version> --repo pivotal-ben-chacko/concourse-tile
+cat concourse-<version>.pivotal.part.* > concourse-<version>.pivotal
+shasum -c concourse-<version>.pivotal.sha256   # must print: OK
+```
+
+`cat` in shell glob order is correct — `split` names parts `.aa`, `.ab`, … which sort alphabetically. Always verify the checksum before uploading the reassembled tile to Ops Manager. Alternatively, skip the binary entirely: the tile is fully reproducible from a clone with `./bin/kiln fetch && ./bin/kiln bake` (releases are pinned by version and SHA1 in `Kilnfile.lock`).
+
 Notes:
 
 - `minimum_version_for_upgrade` is `0.0.1`, so any newer version upgrades the installed tile in place, preserving operator configuration.
