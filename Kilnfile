@@ -7,6 +7,8 @@ releases:
 - name: concourse
 - name: postgres
 - name: routing
+- name: uaa
+- name: credhub
 stemcell_criteria:
   os: ubuntu-jammy
   version: "1"

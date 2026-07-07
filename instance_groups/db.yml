@@ -5,10 +5,16 @@ manifest: |
   databases:
     databases:
     - name: atc
+    - name: uaa
+    - name: credhub
     port: 5432
     roles:
     - name: concourse
       password: (((postgres_password)))
+    - name: uaa
+      password: (((uaa_db_password)))
+    - name: credhub
+      password: (((credhub_db_password)))
 max_in_flight: 1
 single_az_only: false
 errand: false

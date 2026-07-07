@@ -1,44 +1,33 @@
 ---
 name: web
 resource_label: web
-manifest: |
-  add_local_users:
-  - ((.properties.credentials.identity)):((.properties.credentials.password))
-  credhub: (( .properties.secrets_selector.selected_option.parsed_manifest(credhub_snippet) ))
-  external_url: (( .properties.external_url.value ))
-  ldap_auth: (( .properties.auth_selector.selected_option.parsed_manifest(ldap_auth_snippet) ))
-  main_team:
-    auth: (( .properties.auth_selector.selected_option.parsed_manifest(main_team_auth_snippet) ))
-  nats:
-    tls:
-      enabled: true
-      client_cert: (( ..cf.properties.nats_client_cert.cert_pem ))
-      client_key: (( ..cf.properties.nats_client_cert.private_key_pem ))
-  route_registrar: (( .properties.gorouter_selector.selected_option.parsed_manifest(route_registrar_snippet) ))
-  postgresql:
-    database: atc
-    role:
-      name: concourse
-      password: (((postgres_password)))
-  tls:
-    bind_port: 443
-    cert:
-      certificate: ((.properties.tls_credentials.cert_pem))
-      private_key: ((.properties.tls_credentials.private_key_pem))
-  token_signing_key: (((token_signing_key)))
-  vault: (( .properties.secrets_selector.selected_option.parsed_manifest(vault_snippet) ))
-  worker_gateway:
-    authorized_keys: |
-      (((worker_key.public_key)))
-    host_key: (((tsa_host_key)))
-max_in_flight: 1
-single_az_only: false
-errand: false
-run_pre_delete_errand_default: true
-run_post_deploy_errand_default: true
 templates:
 - name: web
   release: concourse
+  manifest: |
+    add_local_users:
+    - ((.properties.credentials.identity)):((.properties.credentials.password))
+    credhub: (( .properties.secrets_selector.selected_option.parsed_manifest(credhub_snippet) ))
+    external_url: (( .properties.external_url.value ))
+    ldap_auth: (( .properties.auth_selector.selected_option.parsed_manifest(ldap_auth_snippet) ))
+    main_team:
+      auth: (( .properties.auth_selector.selected_option.parsed_manifest(main_team_auth_snippet) ))
+    postgresql:
+      database: atc
+      role:
+        name: concourse
+        password: (((postgres_password)))
+    tls:
+      bind_port: 443
+      cert:
+        certificate: ((.properties.tls_credentials.cert_pem))
+        private_key: ((.properties.tls_credentials.private_key_pem))
+    token_signing_key: (((token_signing_key)))
+    vault: (( .properties.secrets_selector.selected_option.parsed_manifest(vault_snippet) ))
+    worker_gateway:
+      authorized_keys: |
+        (((worker_key.public_key)))
+      host_key: (((tsa_host_key)))
 - name: bpm
   release: bpm
 - name: route_registrar
@@ -49,12 +38,126 @@ templates:
       from: nats-tls
       deployment: (( ..cf.deployment_name ))
     routing_api: nil
+  manifest: |
+    nats:
+      tls:
+        enabled: true
+        client_cert: (( ..cf.properties.nats_client_cert.cert_pem ))
+        client_key: (( ..cf.properties.nats_client_cert.private_key_pem ))
+    route_registrar: (( .properties.gorouter_selector.selected_option.parsed_manifest(route_registrar_snippet) ))
+- name: uaa
+  release: uaa
+  manifest: |
+    uaa:
+      url: https://127.0.0.1:8443
+      port: 8181
+      scim:
+        users:
+        - name: admin
+          password: (((uaa_users_admin)))
+          groups:
+          - scim.write
+          - scim.read
+          - bosh.admin
+          - credhub.read
+          - credhub.write
+      clients:
+        concourse_to_credhub_client:
+          id: concourse_to_credhub_client
+          secret: (((concourse_to_credhub_client_secret)))
+          override: true
+          authorized-grant-types: client_credentials
+          scope: ""
+          authorities: credhub.read,credhub.write
+          access-token-validity: 1200
+          refresh-token-validity: 3600
+        credhub_admin:
+          id: credhub_admin
+          secret: (((credhub_admin_secret)))
+          override: true
+          authorized-grant-types: client_credentials
+          scope: ""
+          authorities: credhub.read,credhub.write
+          access-token-validity: 3600
+          refresh-token-validity: 3600
+      admin:
+        client_secret: (((uaa_admin)))
+      login:
+        client_secret: (((uaa_login)))
+      zones:
+        internal:
+          hostnames: []
+      sslCertificate: (((uaa_ssl.certificate)))
+      sslPrivateKey: (((uaa_ssl.private_key)))
+      jwt:
+        revocable: true
+        policy:
+          active_key_id: key-1
+          keys:
+            key-1:
+              signingKey: (((uaa_jwt.private_key)))
+    uaadb:
+      port: 5432
+      db_scheme: postgresql
+      databases:
+      - tag: uaa
+        name: uaa
+      roles:
+      - tag: admin
+        name: uaa
+        password: (((uaa_db_password)))
+    encryption:
+      active_key_label: key-1
+      encryption_keys:
+      - label: key-1
+        passphrase: (((uaa_encryption_key)))
+    login:
+      saml:
+        serviceProviderCertificate: (((uaa_ssl.certificate)))
+        serviceProviderKey: (((uaa_ssl.private_key)))
+        serviceProviderKeyPassword: ""
+- name: credhub
+  release: credhub
+  manifest: |
+    credhub:
+      port: 8844
+      tls: (((credhub_tls)))
+      authentication:
+        uaa:
+          enabled: true
+          url: https://127.0.0.1:8443
+          ca_certs:
+          - (((uaa_ssl.ca)))
+      authorization:
+        acls:
+          enabled: false
+      data_storage:
+        type: postgres
+        database: credhub
+        username: credhub
+        password: (((credhub_db_password)))
+        require_tls: false
+      log_level: info
+      encryption:
+        providers:
+        - name: internal-provider
+          type: internal
+        keys:
+        - provider_name: internal-provider
+          key_properties:
+            encryption_password: (((credhub_encryption_password)))
+          active: true
+max_in_flight: 1
+single_az_only: false
+errand: false
+run_pre_delete_errand_default: true
+run_post_deploy_errand_default: true
 instance_definition:
   default: 1
   configurable: true
 resource_definitions:
 - name: ram
-  default: 512
+  default: 4096
   configurable: true
   constraints:
     min: 0

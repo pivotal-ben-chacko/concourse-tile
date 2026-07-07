@@ -20,6 +20,16 @@ releases:
   sha1: 0e8adace767d232f4629cf856ecff081b1e799d5
   remote_source: bosh.io
   remote_path: https://bosh.io/d/github.com/cloudfoundry/routing-release?v=0.385.0
+- name: uaa
+  version: 76.4.0
+  sha1: a26a5c8facae167e98a12c94f14f6885e926d424
+  remote_source: bosh.io
+  remote_path: https://bosh.io/d/github.com/cloudfoundry/uaa-release?v=76.4.0
+- name: credhub
+  version: 2.12.16
+  sha1: 217f453379557cb6a2e60d3edb5deb56be8d572c
+  remote_source: bosh.io
+  remote_path: https://bosh.io/d/github.com/pivotal-cf/credhub-release?v=2.12.16
 stemcell_criteria:
   os: ubuntu-jammy
   version: "1"
