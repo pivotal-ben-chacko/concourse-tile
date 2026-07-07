@@ -6,6 +6,7 @@ releases:
 - name: bpm
 - name: concourse
 - name: postgres
+- name: routing
 - name: uaa
 - name: credhub
 stemcell_criteria:

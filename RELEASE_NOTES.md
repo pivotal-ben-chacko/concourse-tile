@@ -1,5 +1,13 @@
 # Release Notes
 
+## 1.3.0 — 2026-07-07 (uploaded, not staged)
+
+### Restored: GoRouter route registration
+
+Re-adds the complete GoRouter feature removed in 1.2.1 (Routing form with Direct/GoRouter selector, `route_registrar` on the web VM consuming the cf deployment's shared `nats-tls` link, routing-release 0.385.0, and the `requires_product_versions: cf` declaration).
+
+**This version requires the TAS (`cf`) tile and is intentionally left unstaged.** 1.2.1 remains the staged, deployable version while the foundation has no TAS. When TAS is reinstalled, stage 1.3.0 (`om stage-product --product-name concourse --product-version 1.3.0`) and the feature is available again. The 1.2.1 removal migration is not carried forward, so the restored selector starts at its default (Direct) and all other configuration is preserved.
+
 ## 1.2.1 — 2026-07-07
 
 ### Removed: GoRouter route registration and the TAS dependency

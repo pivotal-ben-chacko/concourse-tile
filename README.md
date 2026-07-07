@@ -118,7 +118,12 @@ All settings live under the tile's single **Settings** form:
 
 - **Tagged Worker Pool Tag** — the tag advertised by workers in the `tagged_worker` instance group. Pipeline steps target them with `tags: [<value>]`; untagged steps never land on tagged workers. Scale the pool on the **Resource Config** page. For a tagged-only deployment, set the untagged `worker` group to 0 instances and the `tagged_worker` group to 1+.
 
-Clients reach the web UI directly: your own DNS record pointing at the web VM, TLS served by the certificate from the Settings page. (Versions 1.1.0–1.2.0 offered optional GoRouter route registration via the TAS tile; it was removed in 1.2.1 when TAS was retired from the foundation — see RELEASE_NOTES.md.)
+The **Routing** form controls how clients reach the web UI — a selector, switchable at any time (requires the TAS (`cf`) tile to be installed in either mode; the tile declares this dependency):
+
+- **Direct** (default) — your own DNS record pointing at the web VM, TLS served by the certificate from the Settings page.
+- **Register with GoRouter** — a `route_registrar` job colocated on the web VM publishes `<hostname>.<system-domain>` to the TAS routers over NATS-TLS (consuming the cf deployment's shared `nats-tls` BOSH link). The route is a TLS route to the web VM's port 443: the **TLS Certificate SAN** you enter must appear in the Concourse TLS certificate, and the certificate's CA must be added to "CA certificates trusted by Router" in TAS networking settings. Set the Web VM domain to the route's FQDN.
+
+Version note: 1.2.1 (deployable without TAS) removed this feature; 1.3.0 restored it and therefore requires TAS — see RELEASE_NOTES.md for which to stage on a TAS-less foundation.
 
 The **Pipeline Secrets** form configures the credential manager backing `((var))` references in pipelines — a selector with three options, switchable at any time:
 

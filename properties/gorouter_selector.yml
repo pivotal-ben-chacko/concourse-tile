@@ -1,0 +1,41 @@
+---
+name: gorouter_selector
+type: selector
+default: direct
+configurable: true
+optional: false
+freeze_on_deploy: false
+unique: false
+option_templates:
+- name: direct_option
+  select_value: direct
+  named_manifests:
+  - name: route_registrar_snippet
+    manifest: |
+      routes: []
+- name: gorouter_option
+  select_value: gorouter
+  property_blueprints:
+  - name: route_hostname
+    type: string
+    default: concourse
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  - name: server_cert_domain_san
+    type: string
+    configurable: true
+    optional: false
+    freeze_on_deploy: false
+    unique: false
+  named_manifests:
+  - name: route_registrar_snippet
+    manifest: |
+      routes:
+      - name: concourse
+        tls_port: 443
+        server_cert_domain_san: (( .properties.gorouter_selector.gorouter_option.server_cert_domain_san.value ))
+        registration_interval: 20s
+        uris:
+        - (( .properties.gorouter_selector.gorouter_option.route_hostname.value )).(( ..cf.cloud_controller.system_domain.value ))
