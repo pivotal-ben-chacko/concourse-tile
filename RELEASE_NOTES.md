@@ -1,8 +1,9 @@
 # Release Notes
 
-## 1.3.1 — unreleased (main branch)
+## 1.3.1 — 2026-07-07 (hotfix; uploaded, not staged)
 
-- Carries the 1.2.2 deploy-order fix forward to the GoRouter-enabled 1.3.x line: the db instance group deploys first. Bake and upload this instead of 1.3.0 when TAS returns.
+- Hotfix over 1.3.0: carries the 1.2.2 deploy-order fix to the GoRouter-enabled 1.3.x line — the db instance group deploys first, so UAA/CredHub find postgres on fresh installs.
+- **Supersedes 1.3.0 entirely** (removed from Ops Manager's available products; its GitHub release is marked superseded). Like 1.3.0, this version requires the TAS (`cf`) tile: stage it only after TAS is reinstalled. 1.2.2 remains the staged, deployable version until then.
 
 ## 1.2.2 — 2026-07-07 (branch: support/1.2.x — staged)
 
