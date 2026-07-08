@@ -1,5 +1,17 @@
 # Release Notes
 
+## 1.3.1 — unreleased (main branch)
+
+- Carries the 1.2.2 deploy-order fix forward to the GoRouter-enabled 1.3.x line: the db instance group deploys first. Bake and upload this instead of 1.3.0 when TAS returns.
+
+## 1.2.2 — 2026-07-07 (branch: support/1.2.x — staged)
+
+### Fixed: fresh installs fail with UAA unable to reach postgres
+
+Instance groups deployed in the order web, worker, tagged_worker, **db** — so on a fresh install (no existing db VM), UAA and CredHub started on the web VM before postgres existed and crashed the canary with `FlywaySqlException: Unable to obtain connection from database: Connection to q-s0.db...:5432 refused`. The concourse web job masked this ordering bug because it retries its database connection; UAA and CredHub fail hard.
+
+The **db instance group now deploys first**. Upgrades of existing installations were never affected (the db VM already exists), but the fix is correct for them too. Cut from the `support/1.2.x` branch (no TAS dependency).
+
 ## 1.3.0 — 2026-07-07 (uploaded, not staged)
 
 ### Restored: GoRouter route registration
