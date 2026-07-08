@@ -1,5 +1,13 @@
 # Release Notes
 
+## 1.3.2 — unreleased (main branch)
+
+- Carries the 1.2.3 fix to the GoRouter-enabled 1.3.x line: `uaadb.tls: disabled` (uaa-release defaults to TLS-required, but the tile's postgres serves plain TCP). Supersedes 1.3.1, whose deploy would fail at UAA startup. Bake/upload this instead of the published v1.3.1 when TAS returns.
+
+## 1.2.3 — 2026-07-08 (branch: support/1.2.x — staged)
+
+- Fixed UAA failing with `The server does not support SSL`: set `uaadb.tls: disabled` to match the tile's plain-TCP postgres (same posture as the ATC and CredHub connections). Known follow-up: end-to-end postgres TLS per upstream's `secure-internal-postgres*.yml` ops files.
+
 ## 1.3.1 — 2026-07-07 (hotfix; uploaded, not staged)
 
 - Hotfix over 1.3.0: carries the 1.2.2 deploy-order fix to the GoRouter-enabled 1.3.x line — the db instance group deploys first, so UAA/CredHub find postgres on fresh installs.

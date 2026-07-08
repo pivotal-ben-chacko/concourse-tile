@@ -99,6 +99,7 @@ templates:
     uaadb:
       port: 5432
       db_scheme: postgresql
+      tls: disabled
       databases:
       - tag: uaa
         name: uaa
