@@ -4,8 +4,10 @@ property_inputs:
   label: Local Concourse User
   description: Create local login user credentials
 - reference: ".properties.external_url"
-  label: Web VM domain
-  description: Enter external url for web UI
+  label: Web UI External URL
+  description: Full external URL for the Concourse web UI, including the protocol,
+    e.g. https://concourse.example.com. Concourse uses this URL to generate login
+    redirects and fly links, so it must be exactly what users type in a browser.
 - reference: ".properties.tls_credentials"
   label: TLS Certificate
   description: TLS Certificate
