@@ -1,5 +1,11 @@
 # Release Notes
 
+## 1.2.3 — 2026-07-08
+
+### Fixed: UAA requires TLS from a postgres that doesn't offer it
+
+With the db VM now deploying first (1.2.2), UAA reached postgres and hit the next failure: `FlywaySqlException ... The server does not support SSL`. uaa-release defaults `uaadb.tls` to `enabled`, but the tile's postgres-release database is plain TCP (upstream pairs UAA with its `secure-internal-postgres-*.yml` ops files; this tile does not enable postgres TLS). Set `uaadb.tls: disabled` on the uaa job. CredHub was already configured with `require_tls: false` and is unaffected. This matches the tile's existing posture (the ATC's postgres connection is also plain TCP on the internal network). Known follow-up: enable postgres TLS end-to-end per upstream's `secure-internal-postgres*.yml` ops files, upgrading all three DB clients to CA-validated TLS.
+
 ## 1.2.2 — 2026-07-07
 
 ### Fixed: fresh installs fail with UAA unable to reach postgres
