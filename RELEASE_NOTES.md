@@ -1,8 +1,9 @@
 # Release Notes
 
-## 1.3.2 — unreleased (main branch)
+## 1.3.2 — 2026-07-08 (GitHub release, split assets; requires TAS)
 
-- Carries the 1.2.3 fix to the GoRouter-enabled 1.3.x line: `uaadb.tls: disabled` (uaa-release defaults to TLS-required, but the tile's postgres serves plain TCP). Supersedes 1.3.1, whose deploy would fail at UAA startup. Bake/upload this instead of the published v1.3.1 when TAS returns.
+- The complete 1.3.x build: GoRouter registration (1.3.0) + db-first deploy order (1.3.1) + `uaadb.tls: disabled` (1.2.3's fix) + clarified external-URL field. **Supersedes v1.3.1**, whose deploy would fail at UAA startup with "The server does not support SSL".
+- Requires the TAS (`cf`) tile — on TAS-less foundations use the staged 1.2.x line instead.
 
 ## 1.2.3 — 2026-07-08 (branch: support/1.2.x — staged)
 
