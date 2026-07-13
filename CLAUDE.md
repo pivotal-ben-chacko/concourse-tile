@@ -32,6 +32,10 @@ Ops Manager access goes through the jump box — see the `opsman` skill (`.claud
 - `instance_groups/{web,worker,db}.yml` — the three BOSH instance groups. Each `manifest:` block is YAML-in-a-string that becomes that job's BOSH properties; only properties the BOSH job's spec declares belong there (web: `add_local_users`, `external_url`, `ldap_auth`, `main_team.auth`, `postgresql`, `tls`, `token_signing_key`, `worker_gateway`; worker: `drain_timeout`, `worker_gateway.worker_key`; db: `databases`). The worker finds the web node's TSA via BOSH links, not manifest properties.
 - `Kilnfile` / `Kilnfile.lock` — release pinning (bpm, concourse, postgres from bosh.io, with sha1s). `stemcell_criteria` in `base.yml` is inline (not `$( stemcell )`) to keep `enable_patch_security_updates: true`; keep it in sync with the lock file when bumping stemcells.
 
+## Concourse pipeline conventions
+
+New Concourse pipelines for this foundation MUST follow the platform-automation pattern documented in `pipelines/CONVENTIONS.md`: platform-automation task scripts + product config from the git repos on the jump box (`/home/ubuntu/git/*.git`), om from the `pivotal-cf/om` github-release resource extracted per task, `ubuntu:noble` task image, full product lifecycle in order (download-product → upload-stemcell → upload-and-stage → configure → pre-deploy-check → apply-changes) so jobs converge from an empty Ops Manager, `serial_groups: [opsman]` on every job touching Ops Manager, no auto-triggers on destructive jobs, and secrets from CredHub — never inline.
+
 ## The auth selector pattern
 
 `properties/auth_selector.yml` is a `selector` with `internal_option` (local users, default) and `ldap_option` branches. **Both options define `named_manifests` with the same names** (`ldap_auth_snippet`, `main_team_auth_snippet`) — that is what lets the web manifest's `parsed_manifest(...)` accessors resolve whichever option is selected, so operators can switch auth modes and redeploy freely. The internal option's `ldap_auth_snippet` is `{}` (renders `ldap_auth: {}`, which the BOSH job treats as unset).
