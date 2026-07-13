@@ -1,0 +1,74 @@
+# Deletes the TKGI (pivotal-container-service) tile from Ops Manager:
+# unstages the product, then runs a full Apply Changes, which executes
+# TKGI's pre-delete errand (delete-all-clusters) and removes the BOSH
+# deployment.
+#
+# DANGER: this destroys every TKGI-managed Kubernetes cluster. The job has
+# no triggers on purpose — run it explicitly:
+#
+#   fly -t lab set-pipeline -p delete-tkgi -c pipelines/delete-tkgi-tile.yml
+#   fly -t lab unpause-pipeline -p delete-tkgi
+#   fly -t lab trigger-job -j delete-tkgi/delete-tkgi-tile --watch
+#
+# Secrets: ((opsman.*)) resolves from the tile's colocated CredHub when the
+# Pipeline Secrets selector is set to "Colocated CredHub". Seed it once from
+# the web VM (bosh ssh into it; credhub_admin secret is on the tile's
+# Credentials tab in Ops Manager):
+#
+#   credhub api https://127.0.0.1:8844 --ca-cert /var/vcap/jobs/credhub/config/server_ca_cert.pem
+#   credhub login --client-name credhub_admin --client-secret <from-credentials-tab>
+#   credhub set -n /concourse/main/delete-tkgi/opsman -t json -v \
+#     '{"target":"https://opsman.example.com","username":"admin","password":"...","skip_ssl_validation":"true"}'
+#
+# Alternative without CredHub: fly set-pipeline -l opsman-vars.yml (kept out
+# of git).
+
+jobs:
+- name: delete-tkgi-tile
+  serial: true
+  plan:
+  - task: unstage-and-apply
+    timeout: 3h
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: ubuntu
+          tag: "22.04"
+      params:
+        OM_TARGET: ((opsman.target))
+        OM_USERNAME: ((opsman.username))
+        OM_PASSWORD: ((opsman.password))
+        OM_SKIP_SSL_VALIDATION: ((opsman.skip_ssl_validation))
+        OM_VERSION: 7.21.2
+      run:
+        path: bash
+        args:
+        - -ec
+        - |
+          echo "Fetching om CLI ${OM_VERSION}..."
+          apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null
+          curl -fsSL -o /usr/local/bin/om \
+            "https://github.com/pivotal-cf/om/releases/download/${OM_VERSION}/om-linux-amd64-${OM_VERSION}"
+          chmod +x /usr/local/bin/om
+
+          echo "Current staged products:"
+          om staged-products
+
+          if ! om staged-products | grep -q pivotal-container-service; then
+            echo "pivotal-container-service is not staged - nothing to delete."
+            exit 0
+          fi
+
+          echo "Unstaging pivotal-container-service..."
+          om unstage-product --product-name pivotal-container-service
+
+          echo "Applying changes (runs delete-all-clusters errand, deletes deployment)..."
+          om apply-changes
+
+          echo "Deleting unused product versions from the Ops Manager library..."
+          om delete-unused-products
+
+          echo "Done. Remaining staged products:"
+          om staged-products
