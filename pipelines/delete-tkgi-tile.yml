@@ -1,74 +1,138 @@
 # Deletes the TKGI (pivotal-container-service) tile from Ops Manager:
-# unstages the product, then runs a full Apply Changes, which executes
-# TKGI's pre-delete errand (delete-all-clusters) and removes the BOSH
-# deployment.
+# unstages the product, then a FULL Apply Changes (deletions are only
+# processed by a full apply), which runs TKGI's delete-all-clusters errand
+# and removes the BOSH deployment. Library is cleaned afterwards.
 #
-# DANGER: this destroys every TKGI-managed Kubernetes cluster. The job has
-# no triggers on purpose — run it explicitly:
+# DANGER: destroys every TKGI-managed Kubernetes cluster. No triggers, by
+# design — run explicitly:
 #
-#   fly -t lab set-pipeline -p delete-tkgi -c pipelines/delete-tkgi-tile.yml
-#   fly -t lab unpause-pipeline -p delete-tkgi
 #   fly -t lab trigger-job -j delete-tkgi/delete-tkgi-tile --watch
 #
-# Secrets: ((opsman.*)) resolves from the tile's colocated CredHub when the
-# Pipeline Secrets selector is set to "Colocated CredHub". Seed it once from
-# the web VM (bosh ssh into it; credhub_admin secret is on the tile's
-# Credentials tab in Ops Manager):
+# Secrets (colocated CredHub, team-level):
+#   /concourse/main/opsman       json: target, username, password, skip_ssl_validation
+#   /concourse/main/git-ssh-key  ssh:  private_key
 #
-#   credhub api https://127.0.0.1:8844 --ca-cert /var/vcap/jobs/credhub/config/server_ca_cert.pem
-#   credhub login --client-name credhub_admin --client-secret <from-credentials-tab>
-#   credhub set -n /concourse/main/delete-tkgi/opsman -t json -v \
-#     '{"target":"https://opsman.example.com","username":"admin","password":"...","skip_ssl_validation":"true"}'
-#
-# Alternative without CredHub: fly set-pipeline -l opsman-vars.yml (kept out
-# of git).
+# Follows pipelines/CONVENTIONS.md (platform-automation task shape,
+# serial_groups: [opsman], CredHub-only secrets).
+
+resources:
+- name: platform-automation-tasks
+  type: git
+  icon: git
+  source:
+    uri: ubuntu@192.168.2.85:/home/ubuntu/git/platform-automation-tasks.git
+    branch: main
+    private_key: ((git-ssh-key.private_key))
+- name: om-cli
+  type: github-release
+  icon: github
+  check_every: 24h
+  source:
+    owner: pivotal-cf
+    repository: om
+- name: task-image
+  type: registry-image
+  icon: docker
+  check_every: 24h
+  source:
+    repository: ubuntu
+    tag: noble
 
 jobs:
 - name: delete-tkgi-tile
   serial: true
+  serial_groups: [opsman]
   plan:
-  - task: unstage-and-apply
-    timeout: 3h
+  - in_parallel:
+    - get: platform-automation-tasks
+    - get: om-cli
+      params:
+        globs: [om-linux-amd64-*.tar.gz]
+    - get: task-image
+  - task: write-env
+    image: task-image
     config:
       platform: linux
-      image_resource:
-        type: registry-image
-        source:
-          repository: ubuntu
-          tag: "22.04"
+      outputs:
+      - name: env
       params:
         OM_TARGET: ((opsman.target))
         OM_USERNAME: ((opsman.username))
         OM_PASSWORD: ((opsman.password))
         OM_SKIP_SSL_VALIDATION: ((opsman.skip_ssl_validation))
-        OM_VERSION: 7.21.2
       run:
         path: bash
         args:
-        - -ec
+        - -c
         - |
-          echo "Fetching om CLI ${OM_VERSION}..."
-          apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null
-          curl -fsSL -o /usr/local/bin/om \
-            "https://github.com/pivotal-cf/om/releases/download/${OM_VERSION}/om-linux-amd64-${OM_VERSION}"
-          chmod +x /usr/local/bin/om
-
-          echo "Current staged products:"
-          om staged-products
-
-          if ! om staged-products | grep -q pivotal-container-service; then
-            echo "pivotal-container-service is not staged - nothing to delete."
+          set -eu
+          {
+            printf 'target: %s\n' "$OM_TARGET"
+            printf 'username: %s\n' "$OM_USERNAME"
+            printf 'password: %s\n' "$OM_PASSWORD"
+            printf 'skip-ssl-validation: %s\n' "$OM_SKIP_SSL_VALIDATION"
+            printf 'request-timeout: 1800\n'
+          } > env/env.yml
+  - task: unstage-tkgi
+    image: task-image
+    config:
+      platform: linux
+      inputs:
+      - name: env
+      - name: om-cli
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -eu
+          apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
+          tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
+          if ! om --env env/env.yml staged-products | grep -q pivotal-container-service; then
+            echo "pivotal-container-service is not staged - nothing to unstage."
             exit 0
           fi
-
-          echo "Unstaging pivotal-container-service..."
-          om unstage-product --product-name pivotal-container-service
-
-          echo "Applying changes (runs delete-all-clusters errand, deletes deployment)..."
-          om apply-changes
-
-          echo "Deleting unused product versions from the Ops Manager library..."
-          om delete-unused-products
-
-          echo "Done. Remaining staged products:"
-          om staged-products
+          om --env env/env.yml unstage-product --product-name pivotal-container-service
+  - task: apply-changes
+    timeout: 3h
+    image: task-image
+    config:
+      platform: linux
+      inputs:
+      - name: platform-automation-tasks
+      - name: env
+      - name: om-cli
+      params:
+        ENV_FILE: env.yml
+        ERRAND_CONFIG_FILE: ""
+        FORCE_LATEST_VARIABLES: "false"
+        IGNORE_WARNINGS: "false"
+        RECREATE: "false"
+        SELECTIVE_DEPLOY_PRODUCTS: ""
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -eu
+          apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
+          tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
+          exec platform-automation-tasks/tasks/apply-changes.sh
+  - task: clean-library
+    image: task-image
+    config:
+      platform: linux
+      inputs:
+      - name: env
+      - name: om-cli
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -eu
+          apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
+          tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
+          om --env env/env.yml delete-unused-products
+          echo "Remaining staged products:"
+          om --env env/env.yml staged-products
