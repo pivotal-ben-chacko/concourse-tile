@@ -48,6 +48,7 @@ extracted first, on `task-image`:
       - -c
       - |
         set -eu
+        apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
         tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
         exec platform-automation-tasks/tasks/<task>.sh
   input_mapping: {env: <product>-config}
@@ -81,6 +82,11 @@ Ops Manager (never assume the product is already uploaded or staged):
   CredHub selector is enabled.)
 - **Timeouts**: apply-changes tasks get `timeout: 3h` (cluster operations are
   slow).
+- **Always install `ca-certificates` in the task bootstrap.** The stock
+  `ubuntu` image has no CA trust store, so any task making verified TLS calls
+  (e.g. `download-product` to the Broadcom portal) fails with "certificate
+  signed by unknown authority". Ops Manager calls masked this until download
+  tasks appeared, because `env.yml` uses skip-ssl-validation.
 - Keep pipeline definitions in git (this directory or the config repos), not
   only in Concourse — `fly get-pipeline` is a recovery tool, not a source of
   truth.
