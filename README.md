@@ -169,4 +169,26 @@ main_team:
 
 so whichever option is selected supplies the snippet — that shared naming is what makes switching modes work. The internal option's `ldap_auth_snippet` is `{}`, which the concourse BOSH job treats as "LDAP not configured". When adding a property to a selector option, touch three places: the option's `property_blueprints`, its snippet, and its `property_inputs` in `forms/settings.yml`.
 
+## Foundation pipelines and credential management
+
+The deployed Concourse runs the platform's own automation. Two pipelines manage the TKGI tile (definitions: `deploy-tkgi` lives in Concourse/its config repos on the jump box; `delete-tkgi` is `pipelines/delete-tkgi-tile.yml` here); both follow `pipelines/CONVENTIONS.md`:
+
+- **deploy-tkgi** — full lifecycle from an empty Ops Manager: `download-product` (Broadcom portal) → `upload-stemcell` → `upload-and-stage-product` → `configure-product` → `pre-deploy-check` → `apply-changes`. Auto-triggers on commits to the `tkgi-config` repo. Product config is `tkgi.yml` in that repo, refreshed from `om staged-config --include-credentials` after successful deploys so it stays complete and replayable.
+- **delete-tkgi** — manual-trigger-only (it destroys all TKGI clusters): unstage → full apply (runs the `delete-all-clusters` errand) → library cleanup.
+
+Every pipeline secret resolves at runtime from the tile's **Colocated CredHub** (team-level paths, shared by all pipelines on `main`):
+
+| CredHub path | Contents | Used by |
+|---|---|---|
+| `/concourse/main/opsman` | Ops Manager target/username/password/skip_ssl_validation | `write-env` tasks build `env.yml` at runtime |
+| `/concourse/main/vcenter` | vCenter service account (identity/password) | written into a vars file for `configure-product` (`tkgi.yml` holds `((vcenter_username))`/`((vcenter_password))` placeholders) |
+| `/concourse/main/pivnet-api-token` | Broadcom support portal API token | `download-product` |
+| `/concourse/main/git-ssh-key` | SSH key for the jump-box git repos | all `git` resources |
+
+No secrets live in pipeline YAML or the config repos. The TKGI API TLS certificate (`.pivotal-container-service.pks_tls`) is a generate-once staged-product property (via `om generate-certificate`), stored by Ops Manager and untouched by `configure-product` runs. The only plaintext credential file remaining is `~/env.sh` on the jump box (the operator workstation).
+
+**Seeding/updating CredHub secrets**: the colocated CredHub only listens on the web VM's localhost. Get a UAA token as the `credhub_admin` client (its secret is on the tile's Credentials tab, or `om curl -p "/api/v0/deployed/products/<guid>/variables?name=credhub_admin_secret"`), then PUT to `https://127.0.0.1:8844/api/v1/data` from the web VM (`bosh ssh web`). Updating a credential requires no pipeline or git change — the next build picks it up.
+
+Two operational lessons encoded in the conventions: force `fly check-resource` after pushing a config fix before manually triggering (or the job rebuilds the old commit), and patch pipelines by scp-ing script files rather than inline ssh heredocs (unquoted heredocs expand `$vars` on the wrong machine).
+
 See `CLAUDE.md` for further tile-authoring conventions and `.claude/skills/opsman/SKILL.md` for jump-box access patterns.
