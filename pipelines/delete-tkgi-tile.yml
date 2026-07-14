@@ -156,7 +156,7 @@ jobs:
         - -c
         - |
           set -eu
-          apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
+          apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates python3 >/dev/null
           tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
           install bosh-cli/bosh-cli-*-linux-amd64 /usr/local/bin/bosh
 
