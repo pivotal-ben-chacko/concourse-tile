@@ -82,6 +82,14 @@ Ops Manager (never assume the product is already uploaded or staged):
   CredHub selector is enabled.)
 - **Timeouts**: apply-changes tasks get `timeout: 3h` (cluster operations are
   slow).
+- **Stemcell uploads are non-floating** (`FLOATING_STEMCELL: "false"`). A
+  floating upload assigns the new stemcell to *every* compatible product,
+  including the BOSH Director — which forces the director VM to be recreated
+  on the next apply-changes (Ops Manager has no per-product float opt-out).
+  Non-floating uploads only assign to products that have no stemcell of that
+  line yet, so the director and other pinned products stay put. A product
+  that genuinely needs a newer stemcell gets it via an explicit
+  `assign-stemcell` step, which never touches the director.
 - **Always install `ca-certificates` in the task bootstrap.** The stock
   `ubuntu` image has no CA trust store, so any task making verified TLS calls
   (e.g. `download-product` to the Broadcom portal) fails with "certificate
