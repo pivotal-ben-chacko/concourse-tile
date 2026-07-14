@@ -1,19 +1,19 @@
-# Deletes the TKGI (pivotal-container-service) tile from Ops Manager:
-# unstages the product, then a FULL Apply Changes (deletions are only
-# processed by a full apply), which runs TKGI's delete-all-clusters errand
-# and removes the BOSH deployment. Library is cleaned afterwards.
+# Deletes the TKGI (pivotal-container-service) tile from Ops Manager, with
+# verification that the destructive pre-delete errand actually ran and
+# cleanup of any orphaned BOSH cloud config left behind.
+#
+# Flow: write-env -> unstage -> full apply-changes (runs delete-all-clusters
+# errand) -> verify-and-cleanup -> clean-library.
 #
 # DANGER: destroys every TKGI-managed Kubernetes cluster. No triggers, by
 # design — run explicitly:
-#
 #   fly -t lab trigger-job -j delete-tkgi/delete-tkgi-tile --watch
 #
 # Secrets (colocated CredHub, team-level):
 #   /concourse/main/opsman       json: target, username, password, skip_ssl_validation
 #   /concourse/main/git-ssh-key  ssh:  private_key
 #
-# Follows pipelines/CONVENTIONS.md (platform-automation task shape,
-# serial_groups: [opsman], CredHub-only secrets).
+# Follows pipelines/CONVENTIONS.md.
 
 resources:
 - name: platform-automation-tasks
@@ -30,6 +30,13 @@ resources:
   source:
     owner: pivotal-cf
     repository: om
+- name: bosh-cli
+  type: github-release
+  icon: github
+  check_every: 24h
+  source:
+    owner: cloudfoundry
+    repository: bosh-cli
 - name: task-image
   type: registry-image
   icon: docker
@@ -48,6 +55,9 @@ jobs:
     - get: om-cli
       params:
         globs: [om-linux-amd64-*.tar.gz]
+    - get: bosh-cli
+      params:
+        globs: [bosh-cli-*-linux-amd64]
     - get: task-image
   - task: write-env
     image: task-image
@@ -80,6 +90,8 @@ jobs:
       inputs:
       - name: env
       - name: om-cli
+      outputs:
+      - name: state
       run:
         path: bash
         args:
@@ -88,11 +100,13 @@ jobs:
           set -eu
           apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
           tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
-          if ! om --env env/env.yml staged-products | grep -q pivotal-container-service; then
+          if om --env env/env.yml staged-products | grep -q pivotal-container-service; then
+            om --env env/env.yml unstage-product --product-name pivotal-container-service
+            echo true > state/unstaged
+          else
             echo "pivotal-container-service is not staged - nothing to unstage."
-            exit 0
+            echo false > state/unstaged
           fi
-          om --env env/env.yml unstage-product --product-name pivotal-container-service
   - task: apply-changes
     timeout: 3h
     image: task-image
@@ -118,6 +132,69 @@ jobs:
           apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
           tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
           exec platform-automation-tasks/tasks/apply-changes.sh
+  - task: verify-and-cleanup
+    image: task-image
+    config:
+      platform: linux
+      inputs:
+      - name: env
+      - name: om-cli
+      - name: bosh-cli
+      - name: state
+      params:
+        PRODUCT: pivotal-container-service
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -eu
+          apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
+          tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
+          install bosh-cli/bosh-cli-*-linux-amd64 /usr/local/bin/bosh
+
+          OM="om --env env/env.yml"
+
+          if [ "$(cat state/unstaged)" != "true" ]; then
+            echo "Nothing was unstaged this run; skipping verification."
+            exit 0
+          fi
+
+          # 1. deletion must have fully completed
+          if $OM staged-products | grep -q "$PRODUCT" || \
+             $OM deployed-products | grep -q "$PRODUCT"; then
+            echo "ERROR: $PRODUCT still present after apply-changes - deletion incomplete."
+            exit 1
+          fi
+          echo "OK: $PRODUCT is no longer staged or deployed."
+
+          # 2. the pre-delete errand must have actually run (clusters/NSX cleanup)
+          LATEST=$($OM curl -s -p /api/v0/installations | \
+            python3 -c 'import json,sys; print(json.load(sys.stdin)["installations"][0]["id"])')
+          echo "Checking installation $LATEST for the delete-all-clusters errand..."
+          if $OM installation-log --id "$LATEST" | grep -q "run-errand delete-all-clusters"; then
+            echo "OK: delete-all-clusters errand ran."
+          else
+            echo "ERROR: delete-all-clusters errand did NOT run in installation $LATEST."
+            echo "Kubernetes clusters and NSX-T objects may be orphaned. Investigate before reusing."
+            exit 1
+          fi
+
+          # 3. remove any BOSH cloud config the deletion left behind
+          eval "$($OM bosh-env)"
+          ORPHANS=$(bosh configs --type=cloud --json | python3 -c '
+          import json,sys
+          for r in json.load(sys.stdin)["Tables"][0]["Rows"]:
+              if r["name"].startswith("pivotal-container-service"):
+                  print(r["id"].rstrip("*"))')
+          if [ -n "$ORPHANS" ]; then
+            for id in $ORPHANS; do
+              echo "Deleting orphaned cloud config $id"
+              bosh -n delete-config "$id"
+            done
+          else
+            echo "OK: no orphaned TKGI cloud configs remain."
+          fi
   - task: clean-library
     image: task-image
     config:
