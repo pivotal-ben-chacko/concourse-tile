@@ -95,6 +95,18 @@ Ops Manager (never assume the product is already uploaded or staged):
   (e.g. `download-product` to the Broadcom portal) fails with "certificate
   signed by unknown authority". Ops Manager calls masked this until download
   tasks appeared, because `env.yml` uses skip-ssl-validation.
+- **Assert required tools after the bootstrap, before real work.** The bare
+  `ubuntu` image ships almost nothing (no `python3`, `jq`, `bosh`, …), so a
+  task that installs/extracts its tools should immediately verify them and
+  fail fast with a clear message — otherwise a missing tool surfaces as a
+  mid-run crash *after* side effects (e.g. a delete completes but the verify
+  step dies on missing `python3`, marking a passing run failed). Pattern:
+
+  ```bash
+  require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || \
+    { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
+  require om bosh python3
+  ```
 - Keep pipeline definitions in git (this directory or the config repos), not
   only in Concourse — `fly get-pipeline` is a recovery tool, not a source of
   truth.

@@ -76,6 +76,8 @@ jobs:
         - -c
         - |
           set -eu
+          require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
+          require printf
           {
             printf 'target: %s\n' "$OM_TARGET"
             printf 'username: %s\n' "$OM_USERNAME"
@@ -98,8 +100,11 @@ jobs:
         - -c
         - |
           set -eu
+          export DEBIAN_FRONTEND=noninteractive
           apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
           tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
+          require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
+          require om grep
           OM="om --env env/env.yml"
           if $OM staged-products | grep -q pivotal-container-service; then
             # staged and not yet marked for deletion - unstage it now
@@ -136,8 +141,12 @@ jobs:
         - -c
         - |
           set -eu
+          export DEBIAN_FRONTEND=noninteractive
           apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
           tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
+          require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
+          require om
+          [ -x platform-automation-tasks/tasks/apply-changes.sh ] || { echo "FATAL: apply-changes.sh missing from platform-automation-tasks"; exit 1; }
           exec platform-automation-tasks/tasks/apply-changes.sh
   - task: verify-and-cleanup
     image: task-image
@@ -156,9 +165,12 @@ jobs:
         - -c
         - |
           set -eu
+          export DEBIAN_FRONTEND=noninteractive
           apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates python3 >/dev/null
           tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
           install bosh-cli/bosh-cli-*-linux-amd64 /usr/local/bin/bosh
+          require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
+          require om bosh python3
 
           OM="om --env env/env.yml"
 
@@ -215,8 +227,11 @@ jobs:
         - -c
         - |
           set -eu
+          export DEBIAN_FRONTEND=noninteractive
           apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
           tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
+          require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
+          require om
           om --env env/env.yml delete-unused-products
           echo "Remaining staged products:"
           om --env env/env.yml staged-products
