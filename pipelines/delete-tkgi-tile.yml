@@ -100,12 +100,19 @@ jobs:
           set -eu
           apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
           tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
-          if om --env env/env.yml staged-products | grep -q pivotal-container-service; then
-            om --env env/env.yml unstage-product --product-name pivotal-container-service
-            echo true > state/unstaged
+          OM="om --env env/env.yml"
+          if $OM staged-products | grep -q pivotal-container-service; then
+            # staged and not yet marked for deletion - unstage it now
+            $OM unstage-product --product-name pivotal-container-service
+            echo true > state/needs_deletion
+          elif $OM deployed-products | grep -q pivotal-container-service; then
+            # already unstaged in a prior (e.g. failed) run but still deployed -
+            # the deletion is pending; a full apply-changes will complete it
+            echo "TKGI already staged for deletion from a prior run; completing it."
+            echo true > state/needs_deletion
           else
-            echo "pivotal-container-service is not staged - nothing to unstage."
-            echo false > state/unstaged
+            echo "pivotal-container-service not present - nothing to delete."
+            echo false > state/needs_deletion
           fi
   - task: apply-changes
     timeout: 3h
@@ -155,8 +162,8 @@ jobs:
 
           OM="om --env env/env.yml"
 
-          if [ "$(cat state/unstaged)" != "true" ]; then
-            echo "Nothing was unstaged this run; skipping verification."
+          if [ "$(cat state/needs_deletion)" != "true" ]; then
+            echo "TKGI was not present to delete; skipping verification."
             exit 0
           fi
 
