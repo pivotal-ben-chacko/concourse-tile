@@ -2,18 +2,22 @@
 # verification that the destructive pre-delete errand actually ran and
 # cleanup of any orphaned BOSH cloud config left behind.
 #
+# Runs on the official platform-automation image (om, bosh, credhub, python,
+# CA certs all pre-baked), served from minio on the jumpbox
+# (http://192.168.2.85:9100, bucket platform-automation). Tasks therefore
+# need NO bootstrap - no apt, no tool downloads, no self-checks.
+#
 # Flow: write-env -> unstage -> full apply-changes (runs delete-all-clusters
 # errand) -> verify-and-cleanup -> clean-library.
 #
 # DANGER: destroys every TKGI-managed Kubernetes cluster. No triggers, by
-# design — run explicitly:
+# design - run explicitly:
 #   fly -t lab trigger-job -j delete-tkgi/delete-tkgi-tile --watch
 #
 # Secrets (colocated CredHub, team-level):
 #   /concourse/main/opsman       json: target, username, password, skip_ssl_validation
+#   /concourse/main/minio        json: access_key_id, secret_access_key
 #   /concourse/main/git-ssh-key  ssh:  private_key
-#
-# Follows pipelines/CONVENTIONS.md.
 
 resources:
 - name: platform-automation-tasks
@@ -23,27 +27,15 @@ resources:
     uri: ubuntu@192.168.2.85:/home/ubuntu/git/platform-automation-tasks.git
     branch: main
     private_key: ((git-ssh-key.private_key))
-- name: om-cli
-  type: github-release
-  icon: github
-  check_every: 24h
-  source:
-    owner: pivotal-cf
-    repository: om
-- name: bosh-cli
-  type: github-release
-  icon: github
-  check_every: 24h
-  source:
-    owner: cloudfoundry
-    repository: bosh-cli
-- name: task-image
-  type: registry-image
+- name: platform-automation-image
+  type: s3
   icon: docker
-  check_every: 24h
   source:
-    repository: ubuntu
-    tag: noble
+    endpoint: http://192.168.2.85:9100
+    bucket: platform-automation
+    regexp: platform-automation-image-(.*).tgz
+    access_key_id: ((minio.access_key_id))
+    secret_access_key: ((minio.secret_access_key))
 
 jobs:
 - name: delete-tkgi-tile
@@ -52,15 +44,11 @@ jobs:
   plan:
   - in_parallel:
     - get: platform-automation-tasks
-    - get: om-cli
+    - get: platform-automation-image
       params:
-        globs: [om-linux-amd64-*.tar.gz]
-    - get: bosh-cli
-      params:
-        globs: [bosh-cli-*-linux-amd64]
-    - get: task-image
+        unpack: true
   - task: write-env
-    image: task-image
+    image: platform-automation-image
     config:
       platform: linux
       outputs:
@@ -76,8 +64,6 @@ jobs:
         - -c
         - |
           set -eu
-          require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
-          require printf
           {
             printf 'target: %s\n' "$OM_TARGET"
             printf 'username: %s\n' "$OM_USERNAME"
@@ -86,12 +72,11 @@ jobs:
             printf 'request-timeout: 1800\n'
           } > env/env.yml
   - task: unstage-tkgi
-    image: task-image
+    image: platform-automation-image
     config:
       platform: linux
       inputs:
       - name: env
-      - name: om-cli
       outputs:
       - name: state
       run:
@@ -100,19 +85,11 @@ jobs:
         - -c
         - |
           set -eu
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
-          tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
-          require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
-          require om grep
           OM="om --env env/env.yml"
           if $OM staged-products | grep -q pivotal-container-service; then
-            # staged and not yet marked for deletion - unstage it now
             $OM unstage-product --product-name pivotal-container-service
             echo true > state/needs_deletion
           elif $OM deployed-products | grep -q pivotal-container-service; then
-            # already unstaged in a prior (e.g. failed) run but still deployed -
-            # the deletion is pending; a full apply-changes will complete it
             echo "TKGI already staged for deletion from a prior run; completing it."
             echo true > state/needs_deletion
           else
@@ -121,13 +98,12 @@ jobs:
           fi
   - task: apply-changes
     timeout: 3h
-    image: task-image
+    image: platform-automation-image
     config:
       platform: linux
       inputs:
       - name: platform-automation-tasks
       - name: env
-      - name: om-cli
       params:
         ENV_FILE: env.yml
         ERRAND_CONFIG_FILE: ""
@@ -136,26 +112,13 @@ jobs:
         RECREATE: "false"
         SELECTIVE_DEPLOY_PRODUCTS: ""
       run:
-        path: bash
-        args:
-        - -c
-        - |
-          set -eu
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
-          tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
-          require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
-          require om
-          [ -x platform-automation-tasks/tasks/apply-changes.sh ] || { echo "FATAL: apply-changes.sh missing from platform-automation-tasks"; exit 1; }
-          exec platform-automation-tasks/tasks/apply-changes.sh
+        path: platform-automation-tasks/tasks/apply-changes.sh
   - task: verify-and-cleanup
-    image: task-image
+    image: platform-automation-image
     config:
       platform: linux
       inputs:
       - name: env
-      - name: om-cli
-      - name: bosh-cli
       - name: state
       params:
         PRODUCT: pivotal-container-service
@@ -165,13 +128,6 @@ jobs:
         - -c
         - |
           set -eu
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates python3 >/dev/null
-          tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
-          install bosh-cli/bosh-cli-*-linux-amd64 /usr/local/bin/bosh
-          require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
-          require om bosh python3
-
           OM="om --env env/env.yml"
 
           if [ "$(cat state/needs_deletion)" != "true" ]; then
@@ -215,23 +171,17 @@ jobs:
             echo "OK: no orphaned TKGI cloud configs remain."
           fi
   - task: clean-library
-    image: task-image
+    image: platform-automation-image
     config:
       platform: linux
       inputs:
       - name: env
-      - name: om-cli
       run:
         path: bash
         args:
         - -c
         - |
           set -eu
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
-          tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
-          require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
-          require om
           om --env env/env.yml delete-unused-products
           echo "Remaining staged products:"
           om --env env/env.yml staged-products
