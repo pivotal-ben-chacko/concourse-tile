@@ -6,51 +6,57 @@ be built this way.
 
 ## Standard resources
 
+Tasks run on the **official platform-automation image** (om, bosh, credhub,
+python, CA certs pre-baked), served from minio on the Ops Manager VM
+(`http://192.168.2.85:9100`, bucket `platform-automation`). Do NOT use a bare
+`ubuntu` image with per-task tool bootstrapping — that caused a long tail of
+apt / CA-cert / python3 / interactive-hang failures. The image is Broadcom-
+gated; the tarball lives at `~/platform-automation-image-*.tgz` on the Ops
+Manager VM and is uploaded to the minio bucket (`mc cp`). minio runs as a
+systemd service (`/etc/systemd/system/minio.service`, creds in
+`/etc/default/minio`, also in CredHub `/concourse/main/minio`).
+
 ```yaml
 resources:
-- name: platform-automation-tasks        # task scripts (git, jump box)
+- name: platform-automation-tasks        # task scripts (git, Ops Manager VM)
   type: git
   source:
     uri: ubuntu@192.168.2.85:/home/ubuntu/git/platform-automation-tasks.git
     branch: main
     private_key: ((git-ssh-key.private_key))
-- name: <product>-config                 # env.yml + product config (git, jump box)
+- name: <product>-config                 # env.yml + product config (git)
   type: git
   source:
     uri: ubuntu@192.168.2.85:/home/ubuntu/git/<product>-config.git
     branch: main
     private_key: ((git-ssh-key.private_key))
-- name: om-cli                           # om binary, pinned by release glob
-  type: github-release
-  check_every: 24h
-  source: {owner: pivotal-cf, repository: om}
-- name: task-image
-  type: registry-image
-  check_every: 24h
-  source: {repository: ubuntu, tag: noble}
+- name: platform-automation-image        # task image, from minio (S3)
+  type: s3
+  source:
+    endpoint: http://192.168.2.85:9100
+    bucket: platform-automation
+    regexp: platform-automation-image-(.*).tgz
+    access_key_id: ((minio.access_key_id))
+    secret_access_key: ((minio.secret_access_key))
 ```
 
 ## Task shape
 
-Every task runs a platform-automation task script with the om binary
-extracted first, on `task-image`:
+Fetch the image (`unpack: true`) once in the job's initial `in_parallel`, then
+every task runs on it with **no bootstrap** — the tools are already present:
 
 ```yaml
+- get: platform-automation-image
+  params: {unpack: true}
+...
 - task: <name>
-  image: task-image
+  image: platform-automation-image
   config:
     platform: linux
-    inputs: [{name: platform-automation-tasks}, {name: env}, {name: om-cli}]
+    inputs: [{name: platform-automation-tasks}, {name: env}]
     params: {ENV_FILE: env.yml}
     run:
-      path: bash
-      args:
-      - -c
-      - |
-        set -eu
-        apt-get update -qq >/dev/null && apt-get install -y -qq ca-certificates >/dev/null
-        tar -xzf om-cli/om-linux-amd64-*.tar.gz -C /usr/local/bin om
-        exec platform-automation-tasks/tasks/<task>.sh
+      path: platform-automation-tasks/tasks/<task>.sh
   input_mapping: {env: <product>-config}
 ```
 
@@ -60,7 +66,7 @@ Full lifecycle, in this order — a job must be able to converge from an empty
 Ops Manager (never assume the product is already uploaded or staged):
 
 1. `download-product` (SOURCE: pivnet, cached `downloaded-product`/`downloaded-stemcell`)
-2. `upload-stemcell` (FLOATING_STEMCELL: "true")
+2. `upload-stemcell` (FLOATING_STEMCELL: "false" — see stemcell rule below)
 3. `upload-and-stage-product`
 4. `configure-product`
 5. `pre-deploy-check`
@@ -90,23 +96,12 @@ Ops Manager (never assume the product is already uploaded or staged):
   line yet, so the director and other pinned products stay put. A product
   that genuinely needs a newer stemcell gets it via an explicit
   `assign-stemcell` step, which never touches the director.
-- **Always install `ca-certificates` in the task bootstrap.** The stock
-  `ubuntu` image has no CA trust store, so any task making verified TLS calls
-  (e.g. `download-product` to the Broadcom portal) fails with "certificate
-  signed by unknown authority". Ops Manager calls masked this until download
-  tasks appeared, because `env.yml` uses skip-ssl-validation.
-- **Assert required tools after the bootstrap, before real work.** The bare
-  `ubuntu` image ships almost nothing (no `python3`, `jq`, `bosh`, …), so a
-  task that installs/extracts its tools should immediately verify them and
-  fail fast with a clear message — otherwise a missing tool surfaces as a
-  mid-run crash *after* side effects (e.g. a delete completes but the verify
-  step dies on missing `python3`, marking a passing run failed). Pattern:
-
-  ```bash
-  require() { for c in "$@"; do command -v "$c" >/dev/null 2>&1 || \
-    { echo "FATAL: required tool '$c' missing from task image"; exit 1; }; done; }
-  require om bosh python3
-  ```
+- **No per-task tool bootstrapping.** The platform-automation image already
+  has om, bosh, credhub, python3, and CA certs. Do not `apt-get install`,
+  download `om`/`bosh`, or add tool self-checks in tasks — that whole pattern
+  (and its apt CA-cert / python3 / `DEBIAN_FRONTEND` interactive-hang failure
+  modes) is why we moved off bare `ubuntu`. If a task needs a tool the image
+  lacks, add it to the image, not the task.
 - Keep pipeline definitions in git (this directory or the config repos), not
   only in Concourse — `fly get-pipeline` is a recovery tool, not a source of
   truth.

@@ -1,0 +1,432 @@
+# TKGI deploy/upgrade pipeline. Exported from Concourse (fly get-pipeline
+# strips comments); this is the source of truth per pipelines/CONVENTIONS.md.
+#
+# Runs on the official platform-automation image (om/bosh/credhub/python/CA
+# certs pre-baked) served from minio on the Ops Manager VM. No task bootstrap.
+#
+#   deploy-tkgi   - configure + apply an already-staged TKGI (manual trigger)
+#   upgrade-tkgi  - download from Broadcom -> upload/stage -> configure -> apply
+#
+# Stemcell uploads are non-floating (FLOATING_STEMCELL: false) to keep the
+# BOSH director pinned. No auto-triggers (both git resources are trigger:false)
+# so config commits never auto-deploy. Secrets from CredHub /concourse/main/*.
+# To re-set:  fly -t lab set-pipeline -p deploy-tkgi -c pipelines/deploy-tkgi.yml
+jobs:
+- name: deploy-tkgi
+  plan:
+  - in_parallel:
+      steps:
+      - get: platform-automation-tasks
+      - get: tkgi-config
+      - get: platform-automation-image
+        params:
+          unpack: true
+  - config:
+      outputs:
+      - name: env
+      params:
+        OM_PASSWORD: ((opsman.password))
+        OM_SKIP_SSL_VALIDATION: ((opsman.skip_ssl_validation))
+        OM_TARGET: ((opsman.target))
+        OM_USERNAME: ((opsman.username))
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          {
+            printf "target: %s\n" "$OM_TARGET"
+            printf "username: %s\n" "$OM_USERNAME"
+            printf "password: %s\n" "$OM_PASSWORD"
+            printf "skip-ssl-validation: %s\n" "$OM_SKIP_SSL_VALIDATION"
+            printf "request-timeout: 1800\n"
+          } > env/env.yml
+        path: bash
+    image: platform-automation-image
+    task: write-env
+  - config:
+      outputs:
+      - name: secrets
+      params:
+        PIVNET_API_TOKEN: ((pivnet-api-token))
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          printf 'pivnet-api-token: %s\n' "$PIVNET_API_TOKEN" > secrets/pivnet.yml
+        path: bash
+    image: platform-automation-image
+    task: write-pivnet-secrets
+  - config:
+      caches:
+      - path: downloaded-product
+      - path: downloaded-stemcell
+      inputs:
+      - name: platform-automation-tasks
+      - name: config
+      - name: secrets
+      outputs:
+      - name: downloaded-product
+      - name: downloaded-stemcell
+      - name: assign-stemcell-config
+      params:
+        CONFIG_FILE: download-tkgi.yml
+        SOURCE: pivnet
+        VARS_FILES: secrets/pivnet.yml
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/download-product.sh
+        path: bash
+    image: platform-automation-image
+    input_mapping:
+      config: tkgi-config
+    task: download-tkgi
+  - config:
+      inputs:
+      - name: platform-automation-tasks
+      - name: env
+      - name: stemcell
+      params:
+        CONFIG_FILE: ""
+        ENV_FILE: env.yml
+        FLOATING_STEMCELL: "false"
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/upload-stemcell.sh
+        path: bash
+    image: platform-automation-image
+    input_mapping:
+      stemcell: downloaded-stemcell
+    task: upload-stemcell
+  - config:
+      inputs:
+      - name: platform-automation-tasks
+      - name: env
+      - name: product
+      params:
+        CONFIG_FILE: ""
+        ENV_FILE: env.yml
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/upload-and-stage-product.sh
+        path: bash
+    image: platform-automation-image
+    input_mapping:
+      product: downloaded-product
+    task: upload-and-stage-tkgi
+  - config:
+      outputs:
+      - name: vcenter-secrets
+      params:
+        VCENTER_PASSWORD: ((vcenter.password))
+        VCENTER_USERNAME: ((vcenter.identity))
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          printf "vcenter_username: %s\nvcenter_password: %s\n" "$VCENTER_USERNAME" "$VCENTER_PASSWORD" > vcenter-secrets/vcenter.yml
+        path: bash
+    image: platform-automation-image
+    task: write-vcenter-secrets
+  - config:
+      inputs:
+      - name: platform-automation-tasks
+      - name: config
+      - name: env
+      - name: secrets
+      params:
+        CONFIG_FILE: tkgi.yml
+        ENV_FILE: env.yml
+        OPS_FILES: ""
+        VARS_FILES: secrets/vcenter.yml
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/configure-product.sh
+        path: bash
+    image: platform-automation-image
+    input_mapping:
+      config: tkgi-config
+      secrets: vcenter-secrets
+    task: configure-tkgi
+  - config:
+      inputs:
+      - name: platform-automation-tasks
+      - name: env
+      params:
+        ENV_FILE: env.yml
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/pre-deploy-check.sh
+        path: bash
+    image: platform-automation-image
+    task: pre-deploy-check
+  - config:
+      inputs:
+      - name: platform-automation-tasks
+      - name: env
+      params:
+        ENV_FILE: env.yml
+        ERRAND_CONFIG_FILE: ""
+        FORCE_LATEST_VARIABLES: "false"
+        IGNORE_WARNINGS: "false"
+        RECREATE: "false"
+        SELECTIVE_DEPLOY_PRODUCTS: pivotal-container-service
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/apply-changes.sh
+        path: bash
+    image: platform-automation-image
+    task: apply-changes
+  serial: true
+  serial_groups:
+  - opsman
+- name: upgrade-tkgi
+  plan:
+  - in_parallel:
+      steps:
+      - get: platform-automation-tasks
+      - get: tkgi-config
+      - get: platform-automation-image
+        params:
+          unpack: true
+  - config:
+      outputs:
+      - name: env
+      params:
+        OM_PASSWORD: ((opsman.password))
+        OM_SKIP_SSL_VALIDATION: ((opsman.skip_ssl_validation))
+        OM_TARGET: ((opsman.target))
+        OM_USERNAME: ((opsman.username))
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          {
+            printf "target: %s\n" "$OM_TARGET"
+            printf "username: %s\n" "$OM_USERNAME"
+            printf "password: %s\n" "$OM_PASSWORD"
+            printf "skip-ssl-validation: %s\n" "$OM_SKIP_SSL_VALIDATION"
+            printf "request-timeout: 1800\n"
+          } > env/env.yml
+        path: bash
+    image: platform-automation-image
+    task: write-env
+  - config:
+      outputs:
+      - name: secrets
+      params:
+        PIVNET_API_TOKEN: ((pivnet-api-token))
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          printf 'pivnet-api-token: %s\n' "$PIVNET_API_TOKEN" > secrets/pivnet.yml
+        path: bash
+    image: platform-automation-image
+    task: write-pivnet-secrets
+  - config:
+      caches:
+      - path: downloaded-product
+      - path: downloaded-stemcell
+      inputs:
+      - name: platform-automation-tasks
+      - name: config
+      - name: secrets
+      outputs:
+      - name: downloaded-product
+      - name: downloaded-stemcell
+      - name: assign-stemcell-config
+      params:
+        CONFIG_FILE: download-tkgi.yml
+        SOURCE: pivnet
+        VARS_FILES: secrets/pivnet.yml
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/download-product.sh
+        path: bash
+    image: platform-automation-image
+    input_mapping:
+      config: tkgi-config
+    task: download-tkgi
+  - config:
+      inputs:
+      - name: platform-automation-tasks
+      - name: env
+      - name: stemcell
+      params:
+        CONFIG_FILE: ""
+        ENV_FILE: env.yml
+        FLOATING_STEMCELL: "false"
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/upload-stemcell.sh
+        path: bash
+    image: platform-automation-image
+    input_mapping:
+      stemcell: downloaded-stemcell
+    task: upload-stemcell
+  - config:
+      inputs:
+      - name: platform-automation-tasks
+      - name: env
+      - name: product
+      params:
+        CONFIG_FILE: ""
+        ENV_FILE: env.yml
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/upload-and-stage-product.sh
+        path: bash
+    image: platform-automation-image
+    input_mapping:
+      product: downloaded-product
+    task: upload-and-stage-tkgi
+  - config:
+      outputs:
+      - name: vcenter-secrets
+      params:
+        VCENTER_PASSWORD: ((vcenter.password))
+        VCENTER_USERNAME: ((vcenter.identity))
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          printf "vcenter_username: %s\nvcenter_password: %s\n" "$VCENTER_USERNAME" "$VCENTER_PASSWORD" > vcenter-secrets/vcenter.yml
+        path: bash
+    image: platform-automation-image
+    task: write-vcenter-secrets
+  - config:
+      inputs:
+      - name: platform-automation-tasks
+      - name: config
+      - name: env
+      - name: secrets
+      params:
+        CONFIG_FILE: tkgi.yml
+        ENV_FILE: env.yml
+        OPS_FILES: ""
+        VARS_FILES: secrets/vcenter.yml
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/configure-product.sh
+        path: bash
+    image: platform-automation-image
+    input_mapping:
+      config: tkgi-config
+      secrets: vcenter-secrets
+    task: configure-tkgi
+  - config:
+      inputs:
+      - name: platform-automation-tasks
+      - name: env
+      params:
+        ENV_FILE: env.yml
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/pre-deploy-check.sh
+        path: bash
+    image: platform-automation-image
+    task: pre-deploy-check
+  - config:
+      inputs:
+      - name: platform-automation-tasks
+      - name: env
+      params:
+        ENV_FILE: env.yml
+        ERRAND_CONFIG_FILE: ""
+        FORCE_LATEST_VARIABLES: "false"
+        IGNORE_WARNINGS: "false"
+        RECREATE: "false"
+        SELECTIVE_DEPLOY_PRODUCTS: pivotal-container-service
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          set -eu
+          exec platform-automation-tasks/tasks/apply-changes.sh
+        path: bash
+    image: platform-automation-image
+    task: apply-changes
+  serial: true
+  serial_groups:
+  - opsman
+resources:
+- icon: docker
+  name: platform-automation-image
+  source:
+    access_key_id: ((minio.access_key_id))
+    bucket: platform-automation
+    endpoint: http://192.168.2.85:9100
+    regexp: platform-automation-image-(.*).tgz
+    secret_access_key: ((minio.secret_access_key))
+  type: s3
+- icon: git
+  name: platform-automation-tasks
+  source:
+    branch: main
+    private_key: ((git-ssh-key.private_key))
+    uri: ubuntu@192.168.2.85:/home/ubuntu/git/platform-automation-tasks.git
+  type: git
+- icon: file-cog
+  name: tkgi-config
+  source:
+    branch: main
+    private_key: ((git-ssh-key.private_key))
+    uri: ubuntu@192.168.2.85:/home/ubuntu/git/tkgi-config.git
+  type: git
